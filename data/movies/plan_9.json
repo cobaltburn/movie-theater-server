@@ -1,0 +1,10 @@
+{
+    "id": "plan_9",
+    "name": "Plan 9 from outer space",
+    "genres": ["Horror", "Sci-Fi"],
+    "runtime": 79,
+    "tagline": "Unspeakable Horrors From Outer Space Paralyze The Living And Resurrect The Dead!",
+    "stars": 3.9,
+    "description": "Evil aliens attack Earth and set their terrible 'Plan 9' into action. As the aliens resurrect the dead of the Earth, the lives of the living are in danger.",
+    "image": "plan_9.jpg"
+}

@@ -1,0 +1,40 @@
+{
+    "name": "Best F(r)iends: Volume 1",
+    "director": "Justin MacGregor",
+    "writers": ["Greg Sestero"],
+    "stars": ["Tommy Wiseau", "Kristen StephnsonPino", "Greg Sestero"],
+    "cast": [
+        {
+        "actor": "Greg Sestero",
+        "role": "Jon Kortina"
+        },
+        {
+        "actor": "Tommy Wiseau",
+        "role": "Harvey Lewis"
+        },
+        {
+        "actor": "Kristen StephensonPino",
+        "role": "Traci Walton"
+        },
+        {
+        "actor": "Vince Jolivette",
+        "role": "Andrei"
+        },
+        {
+        "actor": "Rick Edwards",
+        "role": "Rick Stanton"
+        }
+    ],
+    "producers": [
+        {
+        "name": "Greg Sestero",
+        "position": "producer"
+        }
+    ],
+    "genres": ["Drama", "Comdey", "Mystery"],
+    "runtime": 108,
+    "tagline": "Friendship before money",
+    "stars": 5.2,
+    "description": "When a drifter befriends a quirky mortician, an unlikely business partnership is formed. Paranoia soon develops, however, and both men are forced to come to terms with the fragility of friendship and loyalty",
+    "image": "best_friends_1.jpg"
+}

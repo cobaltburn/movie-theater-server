@@ -1,0 +1,10 @@
+{
+    "id": "big_shark",
+    "name": "Big Shark",
+    "genres": ["Adventure", "Mystery", "Thriller"],
+    "runtime": 99,
+    "tagline": "Can New Orleans Survive?",
+    "stars": 6.5,
+    "description": "Three firefighters must save New Orleans from a shark attack.",
+    "image": "big_shark.jpg"
+}

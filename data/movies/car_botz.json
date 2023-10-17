@@ -1,0 +1,10 @@
+{
+    "id": "car_botz",
+    "name": "Car Botz",
+    "genres": ["Action", "Crime", "short"],
+    "runtime": 4,
+    "tagline": "Is man alone in universe? In 2014, that question about to be answer: CAR BOTZ!",
+    "stars": 5.6,
+    "description": "In 2009, a low-budget filmmaker from the country of Morovia saw the teaser trailer to 'Transformers'. Two weeks later, 'CAR BOTZ' was released",
+    "image": "car_botz.jpg"
+}

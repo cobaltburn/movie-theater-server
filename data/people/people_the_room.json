@@ -1,0 +1,58 @@
+{
+    "director": "Tommy Wiseau",
+    "writers": ["Tommy Wiseau"],
+    "stars": [
+        {
+        "actor": "Tommy Wiseau",
+        "role": "Johnny"
+        },
+        {
+        "actor": "Juliette Danielle",
+        "role": "Lisa"
+        },
+        {
+        "actor": "Greg Sestero",
+        "role": "Mark"
+        }
+    ],
+    "cast": [
+        {
+        "actor": "Philip Haldiman",
+        "role": "Denny"
+        },
+        {
+        "actor": "Carolyn Minnott",
+        "role": "Claudettey"
+        },
+        {
+        "actor": "Robyn Paris",
+        "role": "Michelle"
+        },
+        {
+        "actor": "Mike Holmes",
+        "role": "Mike"
+        },
+        {
+        "actor": "Dan Janjigian",
+        "role": "Chris-R"
+        },
+        {
+        "actor": "Kyle Vogt",
+        "role": "Peter"
+        },
+        {
+        "actor": "Greg Ellery",
+        "role": "Steven"
+        }
+    ],
+    "producers": [
+        {
+        "name": "Tommy Wiseau",
+        "position": "executive producer"
+        },
+        {
+        "name": "Greg Sestero",
+        "position": "line producer"
+        }
+    ]
+}

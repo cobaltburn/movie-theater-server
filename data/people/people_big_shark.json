@@ -1,0 +1,70 @@
+{
+    "director": "Tommy Wiseau",
+    "writers": ["Tommy Wiseau"],
+    "stars": [
+        {
+        "actor": "Isaiah LaBorde",
+        "role": "Tim"
+        },
+        {
+        "actor": "Tommy Wiseau",
+        "role": "Patrick"
+        },
+        {
+        "actor": "Erica Mary Gillheeney",
+        "role": "Charlotte"
+        }
+    ],
+    "cast": [
+        {
+        "actor": "Ashton Leigh",
+        "role": "Sophia"
+        },
+        {
+        "actor": "Greg Sestero",
+        "role": "Georgie I"
+        },
+        {
+        "actor": "Mark Valeriano",
+        "role": "Georgie"
+        },
+        {
+        "actor": "Wayne Douglas Morgan",
+        "role": "Captain Joe"
+        },
+        {
+        "actor": "Thomas Johnston",
+        "role": "Paul"
+        },
+        {
+        "actor": "Kaleb Naquin",
+        "role": "Roger"
+        },
+        {
+        "actor": "Raul Phoenix",
+        "role": "Tony"
+        },
+        {
+        "actor": "Jeff Pearson",
+        "role": "Dan Lancing"
+        },
+        {
+        "actor": "Joseph Poliquin",
+        "role": "Alex"
+        }
+    ],
+    "producers": [
+        {
+        "name": "Tommy Wiseau",
+        "position": "producer"
+        },
+        {
+        "name": "Isaiah LaBorde",
+        "position": "producer"
+        },
+        {
+        "name": "Thomas Johnston",
+        "position": "producer"
+        }
+    ]
+}

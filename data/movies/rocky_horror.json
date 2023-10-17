@@ -1,0 +1,10 @@
+{
+    "id": "rocky_horror",
+    "name": "The Rocky Horror Picture Show",
+    "genres": ["Comedy", "Horror", "Musical"],
+    "runtime": 100,
+    "tagline": "Another Kind Of Rocky.",
+    "stars": 7.4,
+    "description": "A newly-engaged couple have a breakdown in an isolated area and must seek shelter at the bizarre residence of Dr. Frank-n-Furter.",
+    "image": "rocky_horror.jpeg"
+}

@@ -1,0 +1,64 @@
+{
+    "name": "Samuri Cop 2: Deadly Vengeance",
+    "director": "Gregory Hatanaka",
+    "writers": ["Rich Mallery", "Tony T.L. Young", "Gregory Hatanaka"],
+    "stars": ["Mathew Karedas", "Mark Fraze", "Bai Ling"],
+    "cast": [
+        {
+        "actor": "Mathew Karedas",
+        "role": "Joe Marshall"
+        },
+        {
+        "actor": "Mark Frazer",
+        "role": "Frank Washington"
+        },
+        {
+        "actor": "Bai Ling",
+        "role": "Doggé"
+        },
+        {
+        "actor": "Kayden Kross",
+        "role": "Milena"
+        },
+        {
+        "actor": "Tommy Wiseau",
+        "role": "Linton"
+        },
+        {
+        "actor": "Cranston Komuro",
+        "role": "Fujiyama"
+        },
+        {
+        "actor": "Laurene Landon",
+        "role": "Athena Higgins"
+        },
+        {
+        "actor": "Melissa Moore",
+        "role": "Peggy"
+        },
+        {
+        "actor": "Mel Novak",
+        "role": "Cutter"
+        },
+        {
+        "actor": "Lexi Belle",
+        "role": "Hera"
+        }
+    ],
+    "producers": [
+        {
+        "name": "Tommy Wiseau",
+        "position": "executive producer"
+        },
+        {
+        "name": "Mathew Karedas",
+        "position": "executive producer"
+        }
+    ],
+    "genres": ["Action", "Crime", "Thriller"],
+    "runtime": 94,
+    "tagline": "They thought he was dead. He was just coolin' off.",
+    "stars": 3.6,
+    "description": "It's 25 years later, and police detective Frank Washington is forced to team up again with his long estranged partner Joe Marshall to investigate a series of assassinations, in a case with ingredients they could never have imagined.",
+    "image": "samuri_cop_2.jpg"
+}

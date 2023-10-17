@@ -1,0 +1,21 @@
+<html lang="en">
+
+<div class="bg-gray-100 flex items-center justify-center w-auto">
+  <div class="grid grid-cols-9 gap-4 w-2/5 p-4">
+    {% for seat in seats %}
+    <div class="relative">
+      {% if seat.available%}
+      <input type="checkbox" id="{{ seat.seat }}" class="flex absolute opacity-0 w-0 h-0">
+      <label for="{{ seat.seat }}" hx-get="/seating/{{ id }}/{{ seat.seat }}" hx-trigger="click"
+        class="w-14 h-14 block bg-blue-500 border-2 border-black rounded-lg cursor-pointer hover:bg-red-500"></label>
+      {% else %}
+      <input type="checkbox" id="{{ seat.seat }}" class="flex absolute opacity-0 w-0 h-0">
+      <label for="{{ seat.seat }}" class="w-14 h-14 block bg-red-500 border-2 border-black rounded-lg"></label>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+</html>

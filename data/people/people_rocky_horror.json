@@ -1,0 +1,54 @@
+{
+   "director": "Jim Sharman",
+    "writers": ["Jim Sharman", "Richard O'Brien"],
+    "stars": [
+        {
+        "actor": "Tim Curry",
+        "role": "Dr. Frank-N-Furter - A Scientist"
+        },
+        {
+        "actor": "Susan Sarandon",
+        "role": "Janet Weiss - A Heroine"
+        },
+        {
+        "actor": "Barry Bostwick",
+        "role": "Brad Majors - A Hero"
+        }
+    ],
+    "cast": [
+        {
+        "actor": "Richard O'Brien",
+        "role": "Riff Raff - A Handyman"
+        },
+        {
+        "actor": "Patricia Quinn",
+        "role": "Magenta - A Domestic"
+        },
+        {
+        "actor": "Nell Campbell",
+        "role": "Columbia - A Groupie"
+        },
+        {
+        "actor": "Jonathan Adams",
+        "role": "Dr. Everett V. Scott - A Rival Scientist"
+        },
+        {
+        "actor": "Peter Hinwood",
+        "role": "Rocky Horror - A Creation"
+        },
+        {
+        "actor": "Meat Loaf",
+        "role": "Eddie - Ex Delivery Boy"
+        }
+    ],
+    "producers": [
+        {
+        "name": "Lou Adler",
+        "position": "executive producer"
+        },
+        {
+        "name": "Michael White",
+        "position": "producer"
+        }
+    ]
+}

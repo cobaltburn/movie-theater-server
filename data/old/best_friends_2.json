@@ -1,0 +1,44 @@
+{
+    "name": "Best F(r)iends: Volume 2",
+    "director": "",
+    "writers": [""],
+    "stars": ["Tommy Wiseau", "Kristen StephnsonPino", "Greg Sestero"],
+    "cast": [
+        {
+        "actor": "Greg Sestero",
+        "role": "Jon Kortina"
+        },
+        {
+        "actor": "Tommy Wiseau",
+        "role": "Harvey Lewis"
+        },
+        {
+        "actor": "Kristen StephensonPino",
+        "role": "Traci Walton"
+        },
+        {
+        "actor": "Rick Edwards",
+        "role": "Rick Stanton"
+        },
+        {
+        "actor": "R.J. Cantu",
+        "role": "Vicente"
+        },
+        {
+        "actor": "George Killingsworth",
+        "role": "Doc Seagar"
+        }
+    ],
+    "producers": [
+        {
+        "name": "Greg Sestero",
+        "position": "producer"
+        }
+    ],
+    "genres": ["Drama", "Comdey", "Mystery"],
+    "runtime": 93,
+    "tagline": "Unmask The Truth",
+    "stars": 5.0,
+    "description": "Leaving the mortician adrift, the drifter finds himself on an expedition across the Southwest encountering wild and crazy characters through a series of twisted and dark foibles.",
+    "image": "best_friends_2.jpeg"
+}

@@ -1,0 +1,72 @@
+{
+    "name": "Car Botz",
+    "director": "Julian Higgins",
+    "writers": ["Stephen Kramer Glickman", "Julian Higgins", "Adam Murray"],
+    "stars": ["Steven T. Bartlett", "Patrick M.J. Finerty", "Stephen Kramer Glickman"],
+    "cast": [
+        {
+        "actor": "Steven T. Bartlett",
+        "role": "Military Man"
+        },
+        {
+        "actor": "Patrick M.J. Finerty",
+        "role": "Vice President"
+        },
+        {
+        "actor": "Stephen Kramer Glickman",
+        "role": "The Narrator"
+        },
+        {
+        "actor": "Mo Kazmi",
+        "role": "Rumblebug"
+        },
+        {
+        "actor": "Tony Ketcham",
+        "role": "Pepaw"
+        },
+        {
+        "actor": "Devin McGregor Ketko",
+        "role": "Liza"
+        },
+        {
+        "actor": "Sancho Martin",
+        "role": "Corruptotron"
+        },
+        {
+        "actor": "Anatoliy O",
+        "role": "Sam"
+        },
+        {
+        "actor": "Edgar Allan Poe IVi",
+        "role": "Robot Moon"
+        },
+        {
+        "actor": "Johnny Robishi",
+        "role": "Man In Car"
+        },
+        {
+        "actor": "Tatiana Subbotina",
+        "role": "Skeleton Woman"
+        },
+        {
+        "actor": "Tommy Wiseau",
+        "role": "President Roman"
+        }
+    ],
+    "producers": [
+        {
+        "name": "Matt Arevalo",
+        "position": "executice producer"
+        },
+        {
+        "name": "Chris Davis",
+        "position": "executice producer"
+        }
+    ],
+    "genres": ["Action", "Crime", "short"],
+    "runtime": 4,
+    "tagline": "Is man alone in universe? In 2014, that question about to be answer: CAR BOTZ!",
+    "stars": 5.6,
+    "description": "In 2009, a low-budget filmmaker from the country of Morovia saw the teaser trailer to \"Transformers\". Two weeks later, \"CAR BOTZ\" was released",
+    "image": "car_botz.jpg"
+}

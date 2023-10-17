@@ -1,0 +1,60 @@
+{
+    "director": "Edward D. Wood Jr.",
+    "writers": ["Edward D. Wood Jr."],
+    "stars": [
+        {
+        "actor": "Gregory Walcott",
+        "role": "Jeff Trent"
+        },
+        {
+        "actor": "Mona McKinnon",
+        "role": "Paula Trent"
+        },
+        {
+        "actor": "Duke Moore",
+        "role": "Lieutenant Harper"
+        }
+    ],
+    "cast": [
+        {
+        "actor": "Tom Keene",
+        "role": "Colonel Tom Edwards"
+        },
+        {
+        "actor": "Carl Anthony",
+        "role": "Patrolman Larry"
+        },
+        {
+        "actor": "Paul Marco",
+        "role": "Patrolman Kelton"
+        },
+        {
+        "actor": "Tor Johnson",
+        "role": "Inspector Daniel Clay"
+        },
+        {
+        "actor": "Dudley Manlove",
+        "role": "Eros"
+        },
+        {
+        "actor": "Joanna Lee",
+        "role": "Tanna"
+        },
+        {
+        "actor": "John Breckinridge",
+        "role": "Ruler"
+        }
+
+    ],
+    "producers": [
+        {
+        "name": "J. Edward Reynolds",
+        "position": "executive producer"
+        },
+        {
+        "name": "Edward D. Wood Jr.",
+        "position": "producer"
+        }
+
+    ]
+}

@@ -1,0 +1,58 @@
+{
+    "director": "Gregory Hatanaka",
+    "writers": ["Rich Mallery", "Tony T.L. Young", "Gregory Hatanaka"],
+    "stars": [
+        {
+        "actor": "Mathew Karedas",
+        "role": "Joe Marshall"
+        },
+        {
+        "actor": "Mark Frazer",
+        "role": "Frank Washington"
+        },
+        {
+        "actor": "Bai Ling",
+        "role": "Doggé"
+        }
+    ],
+    "cast": [
+        {
+        "actor": "Kayden Kross",
+        "role": "Milena"
+        },
+        {
+        "actor": "Tommy Wiseau",
+        "role": "Linton"
+        },
+        {
+        "actor": "Cranston Komuro",
+        "role": "Fujiyama"
+        },
+        {
+        "actor": "Laurene Landon",
+        "role": "Athena Higgins"
+        },
+        {
+        "actor": "Melissa Moore",
+        "role": "Peggy"
+        },
+        {
+        "actor": "Mel Novak",
+        "role": "Cutter"
+        },
+        {
+        "actor": "Lexi Belle",
+        "role": "Hera"
+        }
+    ],
+    "producers": [
+        {
+        "name": "Tommy Wiseau",
+        "position": "executive producer"
+        },
+        {
+        "name": "Mathew Karedas",
+        "position": "executive producer"
+        }
+    ]
+}

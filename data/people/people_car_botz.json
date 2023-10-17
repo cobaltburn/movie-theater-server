@@ -1,0 +1,66 @@
+{
+    "director": "Julian Higgins",
+    "writers": ["Stephen Kramer Glickman", "Julian Higgins", "Adam Murray"],
+    "stars": [
+        {
+        "actor": "Steven T. Bartlett",
+        "role": "Military Man"
+        },
+        {
+        "actor": "Patrick M.J. Finerty",
+        "role": "Vice President"
+        },
+        {
+        "actor": "Stephen Kramer Glickman",
+        "role": "The Narrator"
+        }
+    ],
+    "cast": [
+        {
+        "actor": "Mo Kazmi",
+        "role": "Rumblebug"
+        },
+        {
+        "actor": "Tony Ketcham",
+        "role": "Pepaw"
+        },
+        {
+        "actor": "Devin McGregor Ketko",
+        "role": "Liza"
+        },
+        {
+        "actor": "Sancho Martin",
+        "role": "Corruptotron"
+        },
+        {
+        "actor": "Anatoliy O",
+        "role": "Sam"
+        },
+        {
+        "actor": "Edgar Allan Poe IVi",
+        "role": "Robot Moon"
+        },
+        {
+        "actor": "Johnny Robishi",
+        "role": "Man In Car"
+        },
+        {
+        "actor": "Tatiana Subbotina",
+        "role": "Skeleton Woman"
+        },
+        {
+        "actor": "Tommy Wiseau",
+        "role": "President Roman"
+        }
+    ],
+    "producers": [
+        {
+        "name": "Matt Arevalo",
+        "position": "executice producer"
+        },
+        {
+        "name": "Chris Davis",
+        "position": "executice producer"
+        }
+    ]
+}

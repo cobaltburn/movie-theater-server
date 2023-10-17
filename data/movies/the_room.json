@@ -1,0 +1,10 @@
+{
+    "id": "the_room",
+    "name": "The Room",
+    "genres": ["Drama"],
+    "runtime": 99,
+    "tagline": "A film with the passion of Tennesee Williams.",
+    "stars": 3.6,
+    "description": "In San Francisco, an amiable banker's seemingly perfect life is turned upside down when his deceitful fiancée embarks on an affair with his best friend.",
+    "image": "the_room.png"
+}

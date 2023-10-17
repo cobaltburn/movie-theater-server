@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <!-- <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+</head>
+
+<body class="bg-gray-100">
+  <header class="bg-gray-900 text-white p-4">
+    <div class="container mx-auto">
+      <div class="flex items-center justify-between">
+        <div>
+          <a href="/" class="text-2xl font-semibold">Midnight Movie Theater</a>
+        </div>
+        <nav>
+          <ul class="flex space-x-4">
+            <li><a href="#" hx-get="/home" hx-target="#content" class="hover:text-gray-400">Home</a></li>
+            <li><a href="#" hx-get="/showtimes" hx-target="#content" class="hover:text-gray-400">Showtimes</a></li>
+            <li><a href="#" hx-get="/about" hx-target="#content" class="hover:text-gray-400">About</a></li>
+            <li><a href="#" hx-get="/contact" hx-target="#content" class="hover:text-gray-400">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main id="content" hx-get="/home" hx-trigger="load" class="pt-1 bg-gray-100">
+  </main>
+  <footer></footer>
+</body>
+
+</html>

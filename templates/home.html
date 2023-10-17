@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en">
+{% for movie in movies %}
+<div class="flex py-10 items-center items-center justify-center w-auto">
+  <div class="flex flex-col items-center justify-center bg-white w-[35%] pt-5  rounded-lg">
+    {% include "image.html" %}
+  </div>
+</div>
+{% endfor %}
+
+</html>

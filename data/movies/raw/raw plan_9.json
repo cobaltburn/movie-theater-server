@@ -1,0 +1,66 @@
+{
+    "name": "Plan 9 from outer space",
+    "director": "Edward D. Wood Jr.",
+    "writers": ["Edward D. Wood Jr."],
+    "stars": ["Gregory Walcott", "Mona McKinnon", "Duke Moore"],
+    "cast": [
+        {
+        "actor": "Gregory Walcott",
+        "role": "Jeff Trent"
+        },
+        {
+        "actor": "Mona McKinnon",
+        "role": "Paula Trent"
+        },
+        {
+        "actor": "Duke Moore",
+        "role": "Lieutenant Harper"
+        },
+        {
+        "actor": "Tom Keene",
+        "role": "Colonel Tom Edwards"
+        },
+        {
+        "actor": "Carl Anthony",
+        "role": "Patrolman Larry"
+        },
+        {
+        "actor": "Paul Marco",
+        "role": "Patrolman Kelton"
+        },
+        {
+        "actor": "Tor Johnson",
+        "role": "Inspector Daniel Clay"
+        },
+        {
+        "actor": "Dudley Manlove",
+        "role": "Eros"
+        },
+        {
+        "actor": "Joanna Lee",
+        "role": "Tanna"
+        },
+        {
+        "actor": "John Breckinridge",
+        "role": "Ruler"
+        }
+
+    ],
+    "producers": [
+        {
+        "name": "J. Edward Reynolds",
+        "position": "executive producer"
+        },
+        {
+        "name": "Edward D. Wood Jr.",
+        "position": "producer"
+        }
+
+    ],
+    "genres": ["Horror", "Sci-Fi"],
+    "runtime": 79,
+    "tagline": "Unspeakable Horrors From Outer Space Paralyze The Living And Resurrect The Dead!",
+    "stars": 3.9,
+    "description": "Evil aliens attack Earth and set their terrible "Plan 9" into action. As the aliens resurrect the dead of the Earth, the lives of the living are in danger.",
+    "image": "plan_9.jpg"
+}

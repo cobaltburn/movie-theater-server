@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Grid of Squares</title>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="grid grid-cols-3 gap-4">
+        <!-- Generate 9 divs for a 3x3 grid -->
+        {% for _ in (1..9) %}
+            <div class="w-20 h-20 bg-blue-500 border-2 border-black rounded-lg cursor-pointer" onclick="changeColor(this)"></div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function changeColor(element) {
+            element.classList.toggle('bg-red-500');
+            element.classList.toggle('bg-blue-500');
+        }
+    </script>
+</body>
+</html>
