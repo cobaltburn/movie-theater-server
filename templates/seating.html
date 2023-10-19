@@ -6,11 +6,17 @@
     <div class="relative">
       {% if seat.available%}
       <input type="checkbox" id="{{ seat.seat }}" class="flex absolute opacity-0 w-0 h-0">
-      <label for="{{ seat.seat }}" hx-get="/seating/{{ id }}/{{ seat.seat }}" hx-trigger="click"
-        class="w-14 h-14 block bg-blue-500 border-2 border-black rounded-lg cursor-pointer hover:bg-red-500"></label>
+      <label for="{{ seat.seat }}" hx-get="/seating/{{ id }}/{{ seat.seat }}" hx-trigger="click" hx-target="#content"
+        class="w-14 h-14 block bg-blue-500 border-2 border-black rounded-lg">
+        <span class="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 text-white font-bold">{{
+          seat.seat }}</span>
+      </label>
       {% else %}
       <input type="checkbox" id="{{ seat.seat }}" class="flex absolute opacity-0 w-0 h-0">
-      <label for="{{ seat.seat }}" class="w-14 h-14 block bg-red-500 border-2 border-black rounded-lg"></label>
+      <label for="{{ seat.seat }}" class="w-14 h-14 block bg-red-500 border-2 border-black rounded-lg">
+        <span class="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 text-white font-bold">{{
+          seat.seat }}</span>
+      </label>
       {% endif %}
     </div>
     {% endfor %}

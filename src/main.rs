@@ -65,6 +65,13 @@ struct Seating {
     seats: Vec<Seat>,
 }
 
+#[derive(Template)]
+#[template(path = "seat_confirmation.html")]
+struct Confirmation {
+    seat: i32,
+    movie: Movie,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 struct Seat {
     available: bool,
@@ -118,9 +125,9 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(index))
         .route("/home", get(home))
-        .route("/showtimes", get(showtimes))
         .route("/about", get(about))
         .route("/contact", get(contact))
+        .route("/showtimes", get(showtimes))
         .route("/movie/:id", get(movie))
         .route("/booking/:id", get(booking))
         .route("/seating/:id", get(seating))
@@ -175,8 +182,30 @@ async fn contact() -> Contact {
     Contact {}
 }
 
-async fn select_seat(Path((_id, _seat)): Path<(String, String)>) -> Temp {
-    Temp {}
+async fn select_seat(Path((id, seat)): Path<(String, i32)>) -> Result<Confirmation> {
+    let split_id = id.split_once(':');
+    if split_id.is_none() {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    }
+
+    let (_, showtime_id) = split_id.unwrap();
+    let query = DB
+        .query(
+            r#"
+            SELECT VALUE <-showing<-theaters<-playing<-movies.*
+            FROM ONLY type::thing("showtime",$id)
+            "#,
+        )
+        .bind(("id", showtime_id))
+        .await;
+    if query.is_err() {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    }
+    let movie: Option<Movie> = query.unwrap().take(0).expect("nothing in DB");
+    if let Some(movie) = movie {
+        return Ok(Confirmation { seat, movie });
+    }
+    return Err(StatusCode::NOT_ACCEPTABLE.into());
 }
 
 async fn seating(Path(id): Path<String>) -> Result<Seating> {
@@ -187,14 +216,17 @@ async fn seating(Path(id): Path<String>) -> Result<Seating> {
     let (_, showtime_id) = split_id.unwrap();
 
     let query = DB
-        .query(r#"SELECT seats as seat FROM type::thing("showtime",$id) SPLIT seat"#)
+        .query(r#"SELECT VALUE seats FROM type::thing("showtime",$id)"#)
         .bind(("id", showtime_id))
         .await;
     if query.is_err() {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
     }
-    let seats: Vec<Seat> = query.unwrap().take(0).expect("nothing in the DB");
-    Ok(Seating { id, seats })
+    let seats: Option<Vec<Seat>> = query.unwrap().take(0).expect("nothing in the DB");
+    if let Some(seats) = seats {
+        return Ok(Seating { id, seats });
+    }
+    Err(StatusCode::NOT_ACCEPTABLE.into())
 }
 
 async fn booking(Path(id): Path<String>) -> Booking {

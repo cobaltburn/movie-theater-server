@@ -1,0 +1,23 @@
+<html lang="en">
+<div class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white bg-opacity-70 p-8 rounded-lg shadow-xl">
+    <div class="flex items-center justify-center">
+
+      <div class="flex flex-col items-center mr-8">
+        <img src="/images/{{ movie.image }}" alt="Movie Poster" class="w-96 h-auto mb-4 rounded-lg">
+        <h1 class="text-2xl font-bold">{{ movie.name }}</h1>
+      </div>
+
+      <div class="flex flex-col items-center">
+        <div class="text-3xl font-bold mb-4">Seat: {{ seat }}</div>
+        <div class="flex">
+          <button class="w-24 px-4 py-2 bg-blue-500 text-white rounded-lg mr-4">Confirm</button>
+          <button class="w-24 px-4 py-2 bg-red-500 text-white rounded-lg">Return</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</html>
