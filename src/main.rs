@@ -167,7 +167,7 @@ async fn home() -> Result<HomePage> {
 }
 
 async fn showtimes() -> Result<ShowtimePage> {
-    let movies = DB
+    let query = DB
         .query(
             r#"
             SELECT *, (
@@ -179,9 +179,10 @@ async fn showtimes() -> Result<ShowtimePage> {
             "#,
         )
         .await;
-
-    if let Ok(movies) = movies.expect("invalid query in showtimes").take(0) {
-        return Ok(ShowtimePage { movies });
+    if let Ok(mut qeury) = query {
+        if let Ok(movies) = qeury.take(0) {
+            return Ok(ShowtimePage { movies });
+        }
     }
     Err(StatusCode::NOT_FOUND.into())
 }
@@ -217,13 +218,13 @@ async fn select_seat(Path((id, seat)): Path<(String, i32)>) -> Result<Confirmati
         .bind(("id", showtime_id))
         .await;
     if let Ok(mut query) = query {
-        let movie: Option<Movie> = query.take(0).expect("nothing in DB");
-        if let None = movie {
+        let movie: Option<Movie> = query.take(0).expect("non-valid query index");
+        if movie.is_none() {
             return Err(StatusCode::NOT_ACCEPTABLE.into());
         }
 
-        let time: Option<String> = query.take(1).expect("nothing in DB");
-        if let None = time {
+        let time: Option<String> = query.take(1).expect("non-valid query index");
+        if time.is_none() {
             return Err(StatusCode::NOT_ACCEPTABLE.into());
         }
 
@@ -249,7 +250,7 @@ async fn seating(Path(id): Path<String>) -> Result<SeatingPage> {
         .bind(("id", showtime_id))
         .await;
     if let Ok(mut query) = query {
-        if let Some(seats) = query.take(0).expect("nothing in the DB") {
+        if let Some(seats) = query.take(0).expect("non-valid query index") {
             return Ok(SeatingPage { id, seats });
         }
     }
@@ -278,13 +279,13 @@ async fn purchase(Path((id, seat)): Path<(String, i32)>) -> Result<PurchasePage>
         .bind(("id", showtime_id))
         .await;
     if let Ok(mut query) = query {
-        let time: Option<String> = query.take(0).expect("nothing in the DB");
-        if let None = time {
+        let time: Option<String> = query.take(0).expect("non-valid query index");
+        if time.is_none() {
             return Err(StatusCode::NOT_ACCEPTABLE.into());
         }
 
-        let movie: Option<String> = query.take(1).expect("nothing in DB");
-        if let None = movie {
+        let movie: Option<String> = query.take(1).expect("non-valid query index");
+        if movie.is_none() {
             return Err(StatusCode::NOT_ACCEPTABLE.into());
         }
 
