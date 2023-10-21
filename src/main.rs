@@ -34,42 +34,53 @@ struct Index {}
 
 #[derive(Template)]
 #[template(path = "home.html")]
-struct Home {
+struct HomePage {
     movies: Vec<Movie>,
 }
 
 #[derive(Template)]
 #[template(path = "contact.html")]
-struct Contact {}
+struct ContactPage {}
 
 #[derive(Template)]
 #[template(path = "about.html")]
-struct About {}
+struct AboutPage {}
 
 #[derive(Template)]
 #[template(path = "showtime.html")]
-struct Showtime {
+struct ShowtimePage {
     movies: Vec<MovieShowTimes>,
 }
 
 #[derive(Template)]
 #[template(path = "booking.html")]
-struct Booking {
+struct BookingPage {
     id: String,
 }
 
 #[derive(Template)]
 #[template(path = "seating.html")]
-struct Seating {
+struct SeatingPage {
     id: String,
     seats: Vec<Seat>,
 }
 
 #[derive(Template)]
 #[template(path = "seat_confirmation.html")]
-struct Confirmation {
+struct ConfirmationPage {
+    id: String,
+    time: String,
     seat: i32,
     movie: Movie,
+}
+
+#[derive(Template)]
+#[template(path = "purchase.html")]
+struct PurchasePage {
+    id: String,
+    time: String,
+    seat: i32,
+    movie: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -132,6 +143,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/booking/:id", get(booking))
         .route("/seating/:id", get(seating))
         .route("/seating/:id/:seat", get(select_seat))
+        .route("/purchase/:id/:seat", get(purchase))
         .nest_service("/images", get_service(ServeDir::new("images")));
 
     println!("Listening on http://{ADDR}");
@@ -147,14 +159,14 @@ async fn index() -> Index {
     Index {}
 }
 
-async fn home() -> Result<Home> {
+async fn home() -> Result<HomePage> {
     if let Ok(movies) = DB.select("movies").await {
-        return Ok(Home { movies });
+        return Ok(HomePage { movies });
     }
     Err(StatusCode::NOT_FOUND.into())
 }
 
-async fn showtimes() -> Result<Showtime> {
+async fn showtimes() -> Result<ShowtimePage> {
     let movies = DB
         .query(
             r#"
@@ -169,20 +181,20 @@ async fn showtimes() -> Result<Showtime> {
         .await;
 
     if let Ok(movies) = movies.expect("invalid query in showtimes").take(0) {
-        return Ok(Showtime { movies });
+        return Ok(ShowtimePage { movies });
     }
     Err(StatusCode::NOT_FOUND.into())
 }
 
-async fn about() -> About {
-    About {}
+async fn about() -> AboutPage {
+    AboutPage {}
 }
 
-async fn contact() -> Contact {
-    Contact {}
+async fn contact() -> ContactPage {
+    ContactPage {}
 }
 
-async fn select_seat(Path((id, seat)): Path<(String, i32)>) -> Result<Confirmation> {
+async fn select_seat(Path((id, seat)): Path<(String, i32)>) -> Result<ConfirmationPage> {
     let split_id = id.split_once(':');
     if split_id.is_none() {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
@@ -196,19 +208,36 @@ async fn select_seat(Path((id, seat)): Path<(String, i32)>) -> Result<Confirmati
             FROM ONLY type::thing("showtime",$id)
             "#,
         )
+        .query(
+            r#"
+            SELECT VALUE time::format(time, "%k:%M")
+            FROM ONLY type::thing("showtime", $id)
+            "#,
+        )
         .bind(("id", showtime_id))
         .await;
-    if query.is_err() {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    if let Ok(mut query) = query {
+        let movie: Option<Movie> = query.take(0).expect("nothing in DB");
+        if let None = movie {
+            return Err(StatusCode::NOT_ACCEPTABLE.into());
+        }
+
+        let time: Option<String> = query.take(1).expect("nothing in DB");
+        if let None = time {
+            return Err(StatusCode::NOT_ACCEPTABLE.into());
+        }
+
+        return Ok(ConfirmationPage {
+            id,
+            time: time.unwrap(),
+            seat,
+            movie: movie.unwrap(),
+        });
     }
-    let movie: Option<Movie> = query.unwrap().take(0).expect("nothing in DB");
-    if let Some(movie) = movie {
-        return Ok(Confirmation { seat, movie });
-    }
-    return Err(StatusCode::NOT_ACCEPTABLE.into());
+    Err(StatusCode::NOT_ACCEPTABLE.into())
 }
 
-async fn seating(Path(id): Path<String>) -> Result<Seating> {
+async fn seating(Path(id): Path<String>) -> Result<SeatingPage> {
     let split_id = id.split_once(':');
     if split_id.is_none() {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
@@ -219,18 +248,59 @@ async fn seating(Path(id): Path<String>) -> Result<Seating> {
         .query(r#"SELECT VALUE seats FROM type::thing("showtime",$id)"#)
         .bind(("id", showtime_id))
         .await;
-    if query.is_err() {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
-    }
-    let seats: Option<Vec<Seat>> = query.unwrap().take(0).expect("nothing in the DB");
-    if let Some(seats) = seats {
-        return Ok(Seating { id, seats });
+    if let Ok(mut query) = query {
+        if let Some(seats) = query.take(0).expect("nothing in the DB") {
+            return Ok(SeatingPage { id, seats });
+        }
     }
     Err(StatusCode::NOT_ACCEPTABLE.into())
 }
 
-async fn booking(Path(id): Path<String>) -> Booking {
-    Booking { id }
+async fn purchase(Path((id, seat)): Path<(String, i32)>) -> Result<PurchasePage> {
+    let split_id = id.split_once(':');
+    if split_id.is_none() {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    }
+    let (_, showtime_id) = split_id.unwrap();
+    let query = DB
+        .query(
+            r#"
+            SELECT VALUE time::format(time, "%k:%M, %e %h")
+            FROM ONLY type::thing("showtime", $id)
+            "#,
+        )
+        .query(
+            r#"
+            SELECT VALUE <-showing<-theaters<-playing<-movies.name
+            FROM ONLY type::thing("showtime",$id)
+            "#,
+        )
+        .bind(("id", showtime_id))
+        .await;
+    if let Ok(mut query) = query {
+        let time: Option<String> = query.take(0).expect("nothing in the DB");
+        if let None = time {
+            return Err(StatusCode::NOT_ACCEPTABLE.into());
+        }
+
+        let movie: Option<String> = query.take(1).expect("nothing in DB");
+        if let None = movie {
+            return Err(StatusCode::NOT_ACCEPTABLE.into());
+        }
+
+        return Ok(PurchasePage {
+            id,
+            time: time.unwrap(),
+            seat,
+            movie: movie.unwrap(),
+        });
+    }
+
+    Err(StatusCode::NOT_ACCEPTABLE.into())
+}
+
+async fn booking(Path(id): Path<String>) -> BookingPage {
+    BookingPage { id }
 }
 
 async fn movie(Path(_): Path<String>) -> Temp {

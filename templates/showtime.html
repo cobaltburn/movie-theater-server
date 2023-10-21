@@ -14,7 +14,7 @@
       <h2 class="text-lg font-semibold">Showtimes</h2>
 
       {% for time in movie.times %}
-      <button hx-get="/seating/{{ time.id }}" hx-target="#content"
+      <button hx-get="/seating/{{ time.id }}" hx-target="#content" hx-push-url="true"
         class="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-700">
         {{ time.time }}
       </button>
