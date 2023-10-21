@@ -160,10 +160,10 @@ async fn index() -> Index {
 }
 
 async fn home() -> Result<HomePage> {
-    if let Ok(movies) = DB.select("movies").await {
-        return Ok(HomePage { movies });
-    }
-    Err(StatusCode::NOT_FOUND.into())
+    let Ok(movies) = DB.select("movies").await else {
+        return Err(StatusCode::NOT_FOUND.into());
+    };
+    Ok(HomePage { movies })
 }
 
 async fn showtimes() -> Result<ShowtimePage> {
@@ -179,12 +179,13 @@ async fn showtimes() -> Result<ShowtimePage> {
             "#,
         )
         .await;
-    if let Ok(mut qeury) = query {
-        if let Ok(movies) = qeury.take(0) {
-            return Ok(ShowtimePage { movies });
-        }
-    }
-    Err(StatusCode::NOT_FOUND.into())
+    let Ok(mut qeury) = query else {
+        return Err(StatusCode::NOT_FOUND.into());
+    };
+    let Ok(movies) = qeury.take(0) else {
+        return Err(StatusCode::NOT_FOUND.into());
+    };
+    Ok(ShowtimePage { movies })
 }
 
 async fn about() -> AboutPage {
@@ -217,52 +218,49 @@ async fn select_seat(Path((id, seat)): Path<(String, i32)>) -> Result<Confirmati
         )
         .bind(("id", showtime_id))
         .await;
-    if let Ok(mut query) = query {
-        let movie: Option<Movie> = query.take(0).expect("non-valid query index");
-        if movie.is_none() {
-            return Err(StatusCode::NOT_ACCEPTABLE.into());
-        }
+    let Ok(mut query) = query else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
+    let Some(movie) = query.take(0).expect("invalid-query index") else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
+    let Some(time) = query.take(1).expect("invalid-query index") else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
 
-        let time: Option<String> = query.take(1).expect("non-valid query index");
-        if time.is_none() {
-            return Err(StatusCode::NOT_ACCEPTABLE.into());
-        }
-
-        return Ok(ConfirmationPage {
-            id,
-            time: time.unwrap(),
-            seat,
-            movie: movie.unwrap(),
-        });
-    }
-    Err(StatusCode::NOT_ACCEPTABLE.into())
+    Ok(ConfirmationPage {
+        id,
+        time,
+        seat,
+        movie,
+    })
 }
 
 async fn seating(Path(id): Path<String>) -> Result<SeatingPage> {
-    let split_id = id.split_once(':');
-    if split_id.is_none() {
+    let Some(split_id) = id.split_once(':') else {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
-    }
-    let (_, showtime_id) = split_id.unwrap();
+    };
+    let (_, showtime_id) = split_id;
 
     let query = DB
         .query(r#"SELECT VALUE seats FROM type::thing("showtime",$id)"#)
         .bind(("id", showtime_id))
         .await;
-    if let Ok(mut query) = query {
-        if let Some(seats) = query.take(0).expect("non-valid query index") {
-            return Ok(SeatingPage { id, seats });
-        }
-    }
-    Err(StatusCode::NOT_ACCEPTABLE.into())
+    let Ok(mut query) = query else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
+    let Some(seats) = query.take(0).expect("invalid-query index") else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
+
+    Ok(SeatingPage { id, seats })
 }
 
 async fn purchase(Path((id, seat)): Path<(String, i32)>) -> Result<PurchasePage> {
-    let split_id = id.split_once(':');
-    if split_id.is_none() {
+    let Some(split_id) = id.split_once(':') else {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
-    }
-    let (_, showtime_id) = split_id.unwrap();
+    };
+    let (_, showtime_id) = split_id;
     let query = DB
         .query(
             r#"
@@ -278,26 +276,22 @@ async fn purchase(Path((id, seat)): Path<(String, i32)>) -> Result<PurchasePage>
         )
         .bind(("id", showtime_id))
         .await;
-    if let Ok(mut query) = query {
-        let time: Option<String> = query.take(0).expect("non-valid query index");
-        if time.is_none() {
-            return Err(StatusCode::NOT_ACCEPTABLE.into());
-        }
+    let Ok(mut query) = query else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
+    let Some(time) = query.take(0).expect("invalid query index") else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
+    let Some(movie) = query.take(1).expect("invalid query index") else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
 
-        let movie: Option<String> = query.take(1).expect("non-valid query index");
-        if movie.is_none() {
-            return Err(StatusCode::NOT_ACCEPTABLE.into());
-        }
-
-        return Ok(PurchasePage {
-            id,
-            time: time.unwrap(),
-            seat,
-            movie: movie.unwrap(),
-        });
-    }
-
-    Err(StatusCode::NOT_ACCEPTABLE.into())
+    Ok(PurchasePage {
+        id,
+        time,
+        seat,
+        movie,
+    })
 }
 
 async fn booking(Path(id): Path<String>) -> BookingPage {
