@@ -10,11 +10,20 @@ OPTION IMPORT;
 
 DEFINE TABLE actor SCHEMALESS PERMISSIONS NONE;
 
+DEFINE FIELD id ON actor TYPE record<actor>;
+DEFINE FIELD in ON actor TYPE record<movies>;
+DEFINE FIELD out ON actor TYPE record<people>;
+DEFINE FIELD role ON actor;
+
 -- ------------------------------
 -- TABLE: director
 -- ------------------------------
 
 DEFINE TABLE director SCHEMALESS PERMISSIONS NONE;
+
+DEFINE FIELD id ON director TYPE record<director>;
+DEFINE FIELD in ON director TYPE record<movies>;
+DEFINE FIELD out ON director TYPE record<people>;
 
 -- ------------------------------
 -- TABLE: movies
@@ -22,11 +31,23 @@ DEFINE TABLE director SCHEMALESS PERMISSIONS NONE;
 
 DEFINE TABLE movies SCHEMALESS PERMISSIONS NONE;
 
+DEFINE FIELD description ON movies;
+DEFINE FIELD genres ON movies;
+DEFINE FIELD id ON movies TYPE record<movies>;
+DEFINE FIELD image ON movies;
+DEFINE FIELD name ON movies;
+DEFINE FIELD runtime ON movies;
+DEFINE FIELD stars ON movies;
+DEFINE FIELD tagline ON movies;
+
 -- ------------------------------
 -- TABLE: people
 -- ------------------------------
 
 DEFINE TABLE people SCHEMALESS PERMISSIONS NONE;
+
+DEFINE FIELD id ON people TYPE record<people>;
+DEFINE FIELD name ON people;
 
 -- ------------------------------
 -- TABLE: playing
@@ -34,11 +55,20 @@ DEFINE TABLE people SCHEMALESS PERMISSIONS NONE;
 
 DEFINE TABLE playing SCHEMALESS PERMISSIONS NONE;
 
+DEFINE FIELD id ON playing TYPE record<playing>;
+DEFINE FIELD in ON playing TYPE record<movies>;
+DEFINE FIELD out ON playing TYPE record<theaters>;
+
 -- ------------------------------
 -- TABLE: producer
 -- ------------------------------
 
 DEFINE TABLE producer SCHEMALESS PERMISSIONS NONE;
+
+DEFINE FIELD id ON producer TYPE record<producer>;
+DEFINE FIELD in ON producer TYPE record<movies>;
+DEFINE FIELD out ON producer TYPE record<people>;
+DEFINE FIELD position ON producer;
 
 -- ------------------------------
 -- TABLE: showing
@@ -46,11 +76,19 @@ DEFINE TABLE producer SCHEMALESS PERMISSIONS NONE;
 
 DEFINE TABLE showing SCHEMALESS PERMISSIONS NONE;
 
+DEFINE FIELD id ON showing TYPE record<showing>;
+DEFINE FIELD in ON showing TYPE record<theaters>;
+DEFINE FIELD out ON showing TYPE record<showtime>;
+
 -- ------------------------------
 -- TABLE: showtime
 -- ------------------------------
 
 DEFINE TABLE showtime SCHEMALESS PERMISSIONS NONE;
+
+DEFINE FIELD id ON showtime TYPE record<showtime>;
+DEFINE FIELD seats ON showtime;
+DEFINE FIELD time ON showtime;
 
 -- ------------------------------
 -- TABLE: star
@@ -58,17 +96,28 @@ DEFINE TABLE showtime SCHEMALESS PERMISSIONS NONE;
 
 DEFINE TABLE star SCHEMALESS PERMISSIONS NONE;
 
+DEFINE FIELD id ON star TYPE record<star>;
+DEFINE FIELD in ON star TYPE record<movies>;
+DEFINE FIELD out ON star TYPE record<people>;
+DEFINE FIELD role ON star;
+
 -- ------------------------------
 -- TABLE: theaters
 -- ------------------------------
 
 DEFINE TABLE theaters SCHEMALESS PERMISSIONS NONE;
 
+DEFINE FIELD id ON theaters TYPE record<theaters>;
+
 -- ------------------------------
 -- TABLE: writer
 -- ------------------------------
 
 DEFINE TABLE writer SCHEMALESS PERMISSIONS NONE;
+
+DEFINE FIELD id ON writer TYPE record<writer>;
+DEFINE FIELD in ON writer TYPE record<movies>;
+DEFINE FIELD out ON writer TYPE record<people>;
 
 -- ------------------------------
 -- TRANSACTION
