@@ -4,7 +4,7 @@ use askama_axum::IntoResponse;
 use axum::{
     extract::{Form, Path},
     http::StatusCode,
-    response::{Redirect, Response, Result},
+    response::{Response, Result},
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -20,6 +20,7 @@ pub struct Complete {
     pub movie: String,
     pub time: String,
     pub seat: i32,
+    pub ticket: Thing,
 }
 
 #[derive(Template)]
@@ -71,12 +72,6 @@ struct ShowtimeSeat {
     pub id: Thing,
     pub seat: i32,
     pub time: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct Account {
-    id: Thing,
-    email: String,
 }
 
 pub async fn purchase(Path((id, seat)): Path<(String, i32)>) -> Result<PurchasePage> {
@@ -157,7 +152,7 @@ pub async fn complete_purchase(
     let query = DB
         .query(
             r#"
-            SELECT * 
+            SELECT VALUE id 
             FROM ONLY accounts
             WHERE email = $email
             "#,
@@ -169,27 +164,93 @@ pub async fn complete_purchase(
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
 
-    let Some(account): Option<Account> = query.take(0).unwrap() else {
+    let Ok(Some(user_id)): Result<Option<Thing>, _> = query.take(0) else {
+        let query = DB
+            .query(
+                r#"
+                BEGIN TRANSACTION;
+
+                LET $user = CREATE accounts SET email = $email;
+
+                LET $seat = SELECT VALUE ->showtime_seat->(seats WHERE number = $seat_num AND available = true).*
+                FROM ONLY type::thing("showtime", $id);
+
+                UPDATE $seat SET available = false;
+
+                RELATE ONLY $user->purchase->$seat SET time = time::now(), card_number = $card_number, exp_date = $exp_date RETURN VALUE id;
+
+                COMMIT TRANSACTION                
+                "#,
+            )
+            .bind(("email", &email))
+            .bind(("seat_num", seat))
+            .bind(("id", &showtime_id))
+            .bind(("card_number", &card_num))
+            .bind(("exp_date", &exp_date))
+            .await;
+
+        let Ok(mut query) = query else {
+            return StatusCode::NOT_ACCEPTABLE.into_response();
+        };
+
+        let Ok(result) = query.take(3) else {
+            return Unavailable {}.into_response();
+        };
+
+        let Some(ticket): Option<Thing> = result else {
+            return Unavailable {}.into_response();
+        };
+
+        return Complete {
+            movie,
+            time,
+            seat,
+            ticket,
+        }
+        .into_response();
+    };
+
+    let query = DB
+            .query(
+                r#"
+                BEGIN TRANSACTION;
+
+                LET $seat = SELECT VALUE ->showtime_seat->(seats WHERE number = $seat_num AND available = true).*
+                FROM ONLY type::thing("showtime", $id);
+
+                UPDATE $seat SET available = false;
+
+                RELATE ONLY $user->purchase->$seat SET time = time::now(), card_number = $card_number, exp_date = $exp_date RETURN VALUE id;
+
+                COMMIT TRANSACTION                
+                "#,
+            )
+            .bind(("seat_num", seat))
+            .bind(("id", &showtime_id))
+            .bind(("user", &user_id))
+            .bind(("card_number", &card_num))
+            .bind(("exp_date", &exp_date))
+            .await;
+
+    let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
 
-    // let Some(showtime_seat): Option<ShowtimeSeat> = query.take(0).expect("invalid query index")
-    // else {
-    //     return Redirect::to("/purchase/unavailable").into_response();
-    // };
+    let Ok(result) = query.take(2) else {
+        return Unavailable {}.into_response();
+    };
 
-    //TODO valid that seat is available
-    //TODO return hash value for purchase
-    let url = format!("/purchase/complete/{}/{}/{}", seat, movie, time);
-    Redirect::to((*url).into()).into_response()
-}
+    let Some(ticket): Option<Thing> = result else {
+        return Unavailable {}.into_response();
+    };
 
-pub async fn complete(Path((seat, movie, time)): Path<(i32, String, String)>) -> Complete {
-    Complete { movie, time, seat }
-}
-
-pub async fn unavailable() -> Unavailable {
-    Unavailable {}
+    Complete {
+        movie,
+        time,
+        seat,
+        ticket,
+    }
+    .into_response()
 }
 
 fn is_valid_email(email: &String) -> bool {

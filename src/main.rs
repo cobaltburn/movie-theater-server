@@ -44,10 +44,8 @@ async fn main() -> anyhow::Result<()> {
     DB.signin(ROOT).await?;
     DB.use_ns("theater").use_db("theater").await?;
     let purchase_routes = Router::new()
-        .route("/unavailable", get(unavailable))
         .route("/:id/:seat", get(purchase))
-        .route("/:id/:seat/:movie/:time", post(complete_purchase))
-        .route("/complete/:seat/:movie/:time", get(complete));
+        .route("/:id/:seat/:movie/:time", post(complete_purchase));
 
     let seating_routes = Router::new()
         .route("/:id", get(seating))
