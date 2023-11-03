@@ -1,10 +1,14 @@
-use crate::DB;
+use crate::{DB, MAILER};
 use askama::Template;
 use askama_axum::IntoResponse;
 use axum::{
     extract::{Form, Path},
     http::StatusCode,
     response::{Response, Result},
+};
+use lettre::{
+    message::{header::ContentType, MultiPart},
+    AsyncTransport, Message,
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -163,6 +167,10 @@ pub async fn complete_purchase(
     let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
+    let msg_builder = Message::builder()
+        .from("movietheatercsci694@yahoo.com".parse().unwrap())
+        .to(email.parse().unwrap())
+        .subject("here is your ticket");
 
     let Ok(Some(user_id)): Result<Option<Thing>, _> = query.take(0) else {
         let query = DB
@@ -201,6 +209,13 @@ pub async fn complete_purchase(
             return Unavailable {}.into_response();
         };
 
+        let email = msg_builder
+            .multipart(MultiPart::alternative_plain_html(
+                String::from("here is your ticket"),
+                format!(r#"<h1>{ticket}</h1>"#),
+            ))
+            .unwrap();
+        MAILER.send(email).await.unwrap();
         return Complete {
             movie,
             time,
@@ -243,6 +258,14 @@ pub async fn complete_purchase(
     let Some(ticket): Option<Thing> = result else {
         return Unavailable {}.into_response();
     };
+
+    let email = msg_builder
+        .multipart(MultiPart::alternative_plain_html(
+            String::from("here is your ticket"),
+            format!(r#"<h1>{ticket}</h1>"#),
+        ))
+        .unwrap();
+    MAILER.send(email).await.unwrap();
 
     Complete {
         movie,

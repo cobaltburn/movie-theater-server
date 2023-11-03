@@ -4,6 +4,7 @@ use axum::{
     Router,
 };
 use landing::*;
+use lettre::{transport::smtp::authentication::Credentials, AsyncSmtpTransport, Tokio1Executor};
 use movie::*;
 use once_cell::sync::Lazy;
 use purchase::*;
@@ -32,6 +33,15 @@ const ROOT: Root = Root {
 };
 
 static DB: Lazy<Surreal<Client>> = Lazy::new(Surreal::init);
+static MAILER: Lazy<AsyncSmtpTransport<Tokio1Executor>> = Lazy::new(|| {
+    AsyncSmtpTransport::<Tokio1Executor>::relay("email-smtp.us-east-2.amazonaws.com")
+        .unwrap()
+        .credentials(Credentials::new(
+            "AKIAWUGJ4PUAFBE4PYTC".to_owned(),
+            "BIO6CFyLoum70E6RxQCEOH+lW8t+iONyaROeGl5lVh4H".to_owned(),
+        ))
+        .build()
+});
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -64,4 +74,32 @@ async fn main() -> anyhow::Result<()> {
         .await
         .unwrap();
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use lettre::{
+        message::header::ContentType, transport::smtp::authentication::Credentials, Message,
+        SmtpTransport, Transport,
+    };
+
+    #[tokio::test]
+    async fn email_test() {
+        let creds = Credentials::new(
+            "AKIAWUGJ4PUAFBE4PYTC".to_owned(),
+            "BIO6CFyLoum70E6RxQCEOH+lW8t+iONyaROeGl5lVh4H".to_owned(),
+        );
+        let mailer = SmtpTransport::relay("email-smtp.us-east-2.amazonaws.com")
+            .unwrap()
+            .credentials(creds)
+            .build();
+        let email = Message::builder()
+            .from("movietheatercsci694@yahoo.com".parse().unwrap())
+            .to("theatertest@sharklasers.com".parse().unwrap())
+            .subject("Hello World!")
+            .header(ContentType::TEXT_PLAIN)
+            .body(String::from("Hello World!"))
+            .unwrap();
+        let _ = mailer.send(&email).unwrap();
+    }
 }
