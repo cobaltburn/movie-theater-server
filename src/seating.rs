@@ -63,10 +63,10 @@ pub async fn select_seat(Path((id, seat)): Path<(String, i32)>) -> Result<Confir
     let Ok(mut query) = query else {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
     };
-    let Some(movie) = query.take(0).expect("invalid-query index") else {
+    let Ok(Some(movie)) = query.take(0) else {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
     };
-    let Some(time) = query.take(1).expect("invalid-query index") else {
+    let Ok(Some(time)) = query.take(1) else {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
     };
 

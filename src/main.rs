@@ -1,10 +1,10 @@
 use askama::Template;
 use axum::{
-    extract::Path,
     routing::{get, get_service, post},
     Router,
 };
 use landing::*;
+use movie::*;
 use once_cell::sync::Lazy;
 use purchase::*;
 use seating::*;
@@ -16,18 +16,13 @@ use surrealdb::{
 use tower_http::services::ServeDir;
 
 mod landing;
+mod movie;
 mod purchase;
 mod seating;
 
 #[derive(Template)]
 #[template(path = "temp.html")]
 pub struct Temp {}
-
-#[derive(Template)]
-#[template(path = "booking.html")]
-pub struct BookingPage {
-    pub id: String,
-}
 
 const ADDR: &str = "127.0.0.1:8080";
 const DB_ADDR: &str = "127.0.0.1:8000";
@@ -58,7 +53,6 @@ async fn main() -> anyhow::Result<()> {
         .route("/contact", get(contact))
         .route("/showtimes", get(showtimes))
         .route("/movie/:id", get(movie))
-        .route("/booking/:id", get(booking))
         .nest("/seating", seating_routes)
         .nest("/purchase", purchase_routes)
         .nest_service("/images", get_service(ServeDir::new("images")));
@@ -70,12 +64,4 @@ async fn main() -> anyhow::Result<()> {
         .await
         .unwrap();
     Ok(())
-}
-
-async fn movie(Path(_): Path<String>) -> Temp {
-    Temp {}
-}
-
-async fn booking(Path(id): Path<String>) -> BookingPage {
-    BookingPage { id }
 }
