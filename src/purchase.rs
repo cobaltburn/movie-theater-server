@@ -209,13 +209,13 @@ pub async fn complete_purchase(
             return Unavailable {}.into_response();
         };
 
-        let email = msg_builder
-            .multipart(MultiPart::alternative_plain_html(
-                String::from("here is your ticket"),
-                format!(r#"<h1>{ticket}</h1>"#),
-            ))
-            .unwrap();
-        MAILER.send(email).await.unwrap();
+        //TODO improve email quality
+        if let Ok(email) = msg_builder.multipart(MultiPart::alternative_plain_html(
+            String::from("here is your ticket"),
+            format!(r#"<h1>{ticket}</h1>"#),
+        )) {
+            let _ = MAILER.send(email).await;
+        }
         return Complete {
             movie,
             time,
@@ -259,13 +259,13 @@ pub async fn complete_purchase(
         return Unavailable {}.into_response();
     };
 
-    let email = msg_builder
-        .multipart(MultiPart::alternative_plain_html(
-            String::from("here is your ticket"),
-            format!(r#"<h1>{ticket}</h1>"#),
-        ))
-        .unwrap();
-    MAILER.send(email).await.unwrap();
+    //TODO improve email quality
+    if let Ok(email) = msg_builder.multipart(MultiPart::alternative_plain_html(
+        String::from("here is your ticket"),
+        format!(r#"<h1>{ticket}</h1>"#),
+    )) {
+        let _ = MAILER.send(email).await;
+    }
 
     Complete {
         movie,
