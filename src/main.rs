@@ -1,10 +1,12 @@
 use askama::Template;
 use axum::{
+    extract::FromRef,
     routing::{get, get_service, post},
     Router,
 };
+use axum_extra::extract::cookie::Key;
 use landing::*;
-use lettre::{transport::smtp::authentication::Credentials, AsyncSmtpTransport, Tokio1Executor};
+use login::*;
 use movie::*;
 use once_cell::sync::Lazy;
 use purchase::*;
@@ -17,6 +19,7 @@ use surrealdb::{
 use tower_http::services::ServeDir;
 
 mod landing;
+mod login;
 mod movie;
 mod purchase;
 mod seating;
@@ -33,21 +36,28 @@ const ROOT: Root = Root {
 };
 
 static DB: Lazy<Surreal<Client>> = Lazy::new(Surreal::init);
-static MAILER: Lazy<AsyncSmtpTransport<Tokio1Executor>> = Lazy::new(|| {
-    AsyncSmtpTransport::<Tokio1Executor>::relay("email-smtp.us-east-2.amazonaws.com")
-        .unwrap()
-        .credentials(Credentials::new(
-            "AKIAWUGJ4PUAFBE4PYTC".to_owned(),
-            "BIO6CFyLoum70E6RxQCEOH+lW8t+iONyaROeGl5lVh4H".to_owned(),
-        ))
-        .build()
-});
+
+#[derive(Clone)]
+struct AppState {
+    key: Key,
+}
+
+impl FromRef<AppState> for Key {
+    fn from_ref(state: &AppState) -> Self {
+        state.key.clone()
+    }
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     DB.connect::<Ws>(DB_ADDR).await?;
     DB.signin(ROOT).await?;
     DB.use_ns("theater").use_db("theater").await?;
+
+    let state = AppState {
+        key: Key::generate(),
+    };
+
     let purchase_routes = Router::new()
         .route("/:id/:seat", get(purchase))
         .route("/:id/:seat/:movie/:time", post(complete_purchase));
@@ -58,6 +68,9 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/", get(index))
+        .route("/login", get(get_login))
+        .route("/login", post(post_login))
+        .route("/sign_up", get(sign_up))
         .route("/home", get(home))
         .route("/about", get(about))
         .route("/contact", get(contact))
@@ -65,7 +78,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/movie/:id", get(movie))
         .nest("/seating", seating_routes)
         .nest("/purchase", purchase_routes)
-        .nest_service("/images", get_service(ServeDir::new("images")));
+        .nest_service("/images", get_service(ServeDir::new("images")))
+        .with_state(state);
 
     println!("Listening on http://{ADDR}");
 
@@ -77,29 +91,19 @@ async fn main() -> anyhow::Result<()> {
 }
 
 #[cfg(test)]
-mod tests {
-    use lettre::{
-        message::header::ContentType, transport::smtp::authentication::Credentials, Message,
-        SmtpTransport, Transport,
-    };
+mod test {
 
-    #[tokio::test]
-    async fn email_test() {
-        let creds = Credentials::new(
-            "AKIAWUGJ4PUAFBE4PYTC".to_owned(),
-            "BIO6CFyLoum70E6RxQCEOH+lW8t+iONyaROeGl5lVh4H".to_owned(),
-        );
-        let mailer = SmtpTransport::relay("email-smtp.us-east-2.amazonaws.com")
-            .unwrap()
-            .credentials(creds)
+    #[test]
+    fn test() {
+        use qrcode::render::svg;
+        use qrcode::QrCode;
+        let code = QrCode::new(b"hello world").unwrap();
+        let image = code
+            .render()
+            .min_dimensions(1024, 1024)
+            .dark_color(svg::Color("#800000"))
+            .light_color(svg::Color("#ffffff"))
             .build();
-        let email = Message::builder()
-            .from("movietheatercsci694@yahoo.com".parse().unwrap())
-            .to("theatertest@sharklasers.com".parse().unwrap())
-            .subject("Hello World!")
-            .header(ContentType::TEXT_PLAIN)
-            .body(String::from("Hello World!"))
-            .unwrap();
-        let _ = mailer.send(&email).unwrap();
+        println!("{}", image);
     }
 }

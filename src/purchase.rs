@@ -1,4 +1,4 @@
-use crate::{DB, MAILER};
+use crate::DB;
 use askama::Template;
 use askama_axum::IntoResponse;
 use axum::{
@@ -6,13 +6,11 @@ use axum::{
     http::StatusCode,
     response::{Response, Result},
 };
-use lettre::{
-    message::{header::ContentType, MultiPart},
-    AsyncTransport, Message,
-};
+use qrcode::render::svg;
+use qrcode::QrCode;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use surrealdb::sql::Thing;
+use surrealdb::sql::{Id, Thing};
 
 #[derive(Template)]
 #[template(path = "unavailable.html")]
@@ -24,7 +22,8 @@ pub struct Complete {
     pub movie: String,
     pub time: String,
     pub seat: i32,
-    pub ticket: Thing,
+    pub ticket: Id,
+    pub svg: String,
 }
 
 #[derive(Template)]
@@ -113,19 +112,13 @@ pub async fn purchase(Path((id, seat)): Path<(String, i32)>) -> Result<PurchaseP
 
 pub async fn complete_purchase(
     Path((id, seat, movie, time)): Path<(String, i32, String, String)>,
-    email: Option<Form<UserInfo>>,
-) -> Response {
-    let Some(Form(email)) = email else {
-        println!("invalid query");
-        println!("{:?}", email);
-        return StatusCode::NOT_ACCEPTABLE.into_response();
-    };
-    let UserInfo {
-        email,
+    Form(UserInfo {
         card_num,
         exp_date,
         cvv,
-    } = email;
+        email,
+    }): Form<UserInfo>,
+) -> Response {
     let valid_email = is_valid_email(&email);
     let valid_card_num = is_valid_card_number(&card_num);
     let valid_cvv = is_valid_cvv(&cvv);
@@ -167,13 +160,32 @@ pub async fn complete_purchase(
     let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
-    let msg_builder = Message::builder()
-        .from("movietheatercsci694@yahoo.com".parse().unwrap())
-        .to(email.parse().unwrap())
-        .subject("here is your ticket");
 
-    let Ok(Some(user_id)): Result<Option<Thing>, _> = query.take(0) else {
-        let query = DB
+    let (query, index) = if let Ok(Some(user_id)) = query.take(0) {
+        let user_id: Thing = user_id;
+        (DB
+            .query(
+                r#"
+                BEGIN TRANSACTION;
+
+                LET $seat = SELECT VALUE ->showtime_seat->(seats WHERE number = $seat_num AND available = true).*
+                FROM ONLY type::thing("showtime", $id);
+
+                UPDATE $seat SET available = false;
+
+                RELATE ONLY $user->purchase->$seat SET time = time::now(), card_number = $card_number, exp_date = $exp_date RETURN VALUE id;
+
+                COMMIT TRANSACTION                
+                "#,
+            )
+            .bind(("seat_num", seat))
+            .bind(("id", &showtime_id))
+            .bind(("user", &user_id))
+            .bind(("card_number", &card_num))
+            .bind(("exp_date", &exp_date))
+            .await, 2)
+    } else {
+        (DB
             .query(
                 r#"
                 BEGIN TRANSACTION;
@@ -195,63 +207,14 @@ pub async fn complete_purchase(
             .bind(("id", &showtime_id))
             .bind(("card_number", &card_num))
             .bind(("exp_date", &exp_date))
-            .await;
-
-        let Ok(mut query) = query else {
-            return StatusCode::NOT_ACCEPTABLE.into_response();
-        };
-
-        let Ok(result) = query.take(3) else {
-            return Unavailable {}.into_response();
-        };
-
-        let Some(ticket): Option<Thing> = result else {
-            return Unavailable {}.into_response();
-        };
-
-        //TODO improve email quality
-        if let Ok(email) = msg_builder.multipart(MultiPart::alternative_plain_html(
-            String::from("here is your ticket"),
-            format!(r#"<h1>{ticket}</h1>"#),
-        )) {
-            let _ = MAILER.send(email).await;
-        }
-        return Complete {
-            movie,
-            time,
-            seat,
-            ticket,
-        }
-        .into_response();
+            .await, 3)
     };
-
-    let query = DB
-            .query(
-                r#"
-                BEGIN TRANSACTION;
-
-                LET $seat = SELECT VALUE ->showtime_seat->(seats WHERE number = $seat_num AND available = true).*
-                FROM ONLY type::thing("showtime", $id);
-
-                UPDATE $seat SET available = false;
-
-                RELATE ONLY $user->purchase->$seat SET time = time::now(), card_number = $card_number, exp_date = $exp_date RETURN VALUE id;
-
-                COMMIT TRANSACTION                
-                "#,
-            )
-            .bind(("seat_num", seat))
-            .bind(("id", &showtime_id))
-            .bind(("user", &user_id))
-            .bind(("card_number", &card_num))
-            .bind(("exp_date", &exp_date))
-            .await;
 
     let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
 
-    let Ok(result) = query.take(2) else {
+    let Ok(result) = query.take(index) else {
         return Unavailable {}.into_response();
     };
 
@@ -259,19 +222,20 @@ pub async fn complete_purchase(
         return Unavailable {}.into_response();
     };
 
-    //TODO improve email quality
-    if let Ok(email) = msg_builder.multipart(MultiPart::alternative_plain_html(
-        String::from("here is your ticket"),
-        format!(r#"<h1>{ticket}</h1>"#),
-    )) {
-        let _ = MAILER.send(email).await;
-    }
+    let code = QrCode::new(ticket.id.to_string().as_bytes()).unwrap();
+    let svg = code
+        .render()
+        .min_dimensions(512, 512)
+        .dark_color(svg::Color("#000000"))
+        .light_color(svg::Color("#ffffff"))
+        .build();
 
     Complete {
         movie,
         time,
         seat,
-        ticket,
+        ticket: ticket.id,
+        svg,
     }
     .into_response()
 }

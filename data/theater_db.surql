@@ -5,13 +5,22 @@
 OPTION IMPORT;
 
 -- ------------------------------
+-- TABLE: account_session
+-- ------------------------------
+
+DEFINE TABLE account_session SCHEMALESS;
+
+DEFINE FIELD in ON account_session TYPE record<session>;
+DEFINE FIELD out ON account_session TYPE record<accounts>;
+
+-- ------------------------------
 -- TABLE: accounts
 -- ------------------------------
 
 DEFINE TABLE accounts SCHEMALESS;
 
 DEFINE FIELD email ON accounts;
-DEFINE FIELD id ON accounts TYPE record<accounts>;
+DEFINE FIELD password ON accounts;
 
 DEFINE INDEX email ON accounts FIELDS email UNIQUE;
 
@@ -95,6 +104,12 @@ DEFINE FIELD available ON seats;
 DEFINE FIELD number ON seats;
 
 -- ------------------------------
+-- TABLE: session
+-- ------------------------------
+
+DEFINE TABLE session SCHEMALESS;
+
+-- ------------------------------
 -- TABLE: showing
 -- ------------------------------
 
@@ -151,6 +166,11 @@ DEFINE FIELD out ON writer TYPE record<people>;
 -- ------------------------------
 
 BEGIN TRANSACTION;
+
+-- ------------------------------
+-- TABLE DATA: account_session
+-- ------------------------------
+
 
 -- ------------------------------
 -- TABLE DATA: accounts
@@ -5203,6 +5223,11 @@ UPDATE seats:zz738lsq5myexg13ntus CONTENT { available: true, id: seats:zz738lsq5
 UPDATE seats:zz83pnx6u6exlwqwem18 CONTENT { available: true, id: seats:zz83pnx6u6exlwqwem18, number: 10 };
 UPDATE seats:zzciehuqwpeh96jqlf9i CONTENT { available: true, id: seats:zzciehuqwpeh96jqlf9i, number: 43 };
 UPDATE seats:zzifu92zh69kr3qig4m3 CONTENT { available: true, id: seats:zzifu92zh69kr3qig4m3, number: 11 };
+
+-- ------------------------------
+-- TABLE DATA: session
+-- ------------------------------
+
 
 -- ------------------------------
 -- TABLE DATA: showing
