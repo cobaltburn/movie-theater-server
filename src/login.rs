@@ -97,7 +97,6 @@ pub async fn post_login(
         .bind(("email", &email))
         .bind(("password", &password))
         .await;
-
     let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
@@ -138,7 +137,7 @@ pub async fn post_login(
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
     let jar = jar.add(Cookie::new("session", session.id.to_raw().clone()));
-    (jar, Redirect::to("/account")).into_response()
+    (jar, Redirect::to("/")).into_response()
 }
 
 pub async fn sign_up() -> SignUp {
@@ -211,4 +210,10 @@ fn is_valid_email(email: &String) -> bool {
 
 fn is_valid_password(password: &String) -> bool {
     !password.is_empty()
+}
+
+pub async fn logout(jar: PrivateCookieJar) -> Response {
+    println!("test");
+    let jar = jar.remove(Cookie::named("session"));
+    (jar, Redirect::to("/")).into_response()
 }

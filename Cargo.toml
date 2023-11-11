@@ -9,7 +9,7 @@ edition = "2021"
 anyhow = "1.0.75"
 askama = "0.12.1"
 askama_axum = "0.3.0"
-axum = { version = "0.6.20", features = ["query"] }
+axum = { version = "0.6.20", features = ["query", "ws"] }
 axum-extra = { version = "0.8.0", features = ["cookie", "cookie-private"] }
 chrono = { version = "0.4.31", features = ["std"] }
 hyper-staticfile = "0.9.5"

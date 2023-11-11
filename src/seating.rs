@@ -1,6 +1,12 @@
 use crate::DB;
 use askama::Template;
-use axum::{extract::Path, http::StatusCode, response::Result};
+use askama_axum::IntoResponse;
+use axum::{
+    extract::Path,
+    http::StatusCode,
+    response::{Redirect, Response},
+};
+use axum_extra::extract::PrivateCookieJar;
 use serde::{Deserialize, Serialize};
 use surrealdb::sql::Thing;
 
@@ -38,63 +44,84 @@ pub struct Movie {
     pub image: String,
 }
 
-pub async fn select_seat(Path((id, seat)): Path<(String, i32)>) -> Result<ConfirmationPage> {
-    let split_id = id.split_once(':');
-    if split_id.is_none() {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
-    }
+#[derive(Debug, Deserialize)]
+struct MovieTime {
+    movie: Movie,
+    time: String,
+}
 
-    let (_, showtime_id) = split_id.unwrap();
+#[derive(Deserialize)]
+struct Record {
+    #[allow(dead_code)]
+    id: Thing,
+}
+
+pub async fn select_seat(jar: PrivateCookieJar, Path((id, seat)): Path<(String, i32)>) -> Response {
+    if let Err(err) = check_session(&jar).await {
+        return err;
+    }
+    let Some((_, showtime_id)) = id.split_once(':') else {
+        return StatusCode::NOT_ACCEPTABLE.into_response();
+    };
+
     let query = DB
         .query(
             r#"
-            SELECT VALUE <-showing<-theaters<-playing<-movies.*
+            SELECT (<-showing<-theaters<-playing<-movies.*)[0] AS movie,
+            time::format(time, "%k:%M") AS time
             FROM ONLY type::thing("showtime",$id)
-            "#,
-        )
-        .query(
-            r#"
-            SELECT VALUE time::format(time, "%k:%M")
-            FROM ONLY type::thing("showtime", $id)
             "#,
         )
         .bind(("id", showtime_id))
         .await;
     let Ok(mut query) = query else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
+        return StatusCode::NOT_ACCEPTABLE.into_response();
     };
-    let Ok(Some(movie)) = query.take(0) else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
-    };
-    let Ok(Some(time)) = query.take(1) else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    let Ok(Some(MovieTime { movie, time })) = query.take(0) else {
+        return StatusCode::NOT_ACCEPTABLE.into_response();
     };
 
-    Ok(ConfirmationPage {
+    ConfirmationPage {
         id,
         time,
         seat,
         movie,
-    })
+    }
+    .into_response()
 }
 
-pub async fn seating(Path(id): Path<String>) -> Result<SeatingPage> {
-    let Some(split_id) = id.split_once(':') else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
+pub async fn seating(jar: PrivateCookieJar, Path(id): Path<String>) -> Response {
+    if let Err(err) = check_session(&jar).await {
+        return err;
+    }
+    let Some((_, showtime_id)) = id.split_once(':') else {
+        return StatusCode::NOT_ACCEPTABLE.into_response();
     };
-    let (_, showtime_id) = split_id;
 
     let query = DB
         .query(r#"SELECT VALUE ->showtime_seat->seats.* FROM ONLY type::thing("showtime",$id)"#)
         .bind(("id", showtime_id))
         .await;
     let Ok(mut query) = query else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
+        return StatusCode::NOT_ACCEPTABLE.into_response();
     };
     let Ok(mut seats): Result<Vec<Seat>, _> = query.take(0) else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
+        return StatusCode::NOT_ACCEPTABLE.into_response();
     };
     seats.sort_by(|a, b| a.number.cmp(&b.number));
 
-    Ok(SeatingPage { id, seats })
+    SeatingPage { id, seats }.into_response()
+}
+
+async fn check_session(jar: &PrivateCookieJar) -> Result<&PrivateCookieJar, Response> {
+    let Some(session) = jar.get("session") else {
+        return Err(Redirect::to("/login").into_response());
+    };
+    let Ok(Some(_)) = DB
+        .select::<Option<Record>>(("sessions", session.value()))
+        .await
+    else {
+        return Err(Redirect::to("/login").into_response());
+    };
+    Ok(jar)
 }

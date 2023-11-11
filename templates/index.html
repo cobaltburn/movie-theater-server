@@ -9,50 +9,45 @@
 </head>
 
 <body hx-push-url="true" class="bg-gray-100">
-  <header class="bg-gray-900 text-white p-4">
-    <div class="container mx-auto">
-      <div class="flex items-center justify-between">
-        <div>
-          <a href="/" class="text-2xl font-semibold">Midnight Movie Theater</a>
-        </div>
-        <nav>
-          <ul class="flex space-x-4">
-            <li><a href="#" hx-get="/home" hx-target="#content" hx-push-url="true" class="hover:text-gray-400">Home</a>
-            </li>
-            <li><a href="#" hx-get="/showtimes" hx-target="#content" hx-push-url="true"
-                class="hover:text-gray-400">Showtimes</a></li>
-            <li><a href="#" hx-get="/login" hx-target="#content" hx-push-url="true"
-                class="hover:text-gray-400">Account</a></li>
-            <!-- <li><a href="#" hx-get="/about" hx-target="#content" hx-push-url="true"
+  <div id="body">
+    <header class="bg-gray-900 text-white p-4">
+      <div class="container mx-auto">
+        <div class="flex items-center justify-between">
+          <div>
+            <a href="/" class="text-2xl font-semibold">Midnight Movie Theater</a>
+          </div>
+          <nav>
+            <ul class="flex space-x-4">
+              <li><a href="#" hx-get="/home" hx-target="#content" hx-push-url="true"
+                  class="hover:text-gray-400">Home</a>
+              </li>
+              <li><a href="#" hx-get="/showtimes" hx-target="#content" hx-push-url="true"
+                  class="hover:text-gray-400">Showtimes</a></li>
+              {% if !logged_in %}
+              <li><a href="#" hx-get="/login" hx-target="#content" hx-push-url="true"
+                  class="hover:text-gray-400">Login</a></li>
+              {% else %}
+              <li><a href="#" hx-get="/account" hx-target="#content" hx-push-url="true"
+                  class="hover:text-gray-400">Tickets</a></li>
+              <li><a href="#" hx-post="/logout" hx-target="#body" hx-push-url="true"
+                  class="hover:text-gray-400">Logout</a>
+              </li>
+              {% endif %}
+              <!-- <li><a href="#" hx-get="/about" hx-target="#content" hx-push-url="true"
                 class="hover:text-gray-400">About</a></li>
               <li><a href="#" hx-get="/contact" hx-target="#content" hx-push-url="true"
                   class="hover:text-gray-400">Contact</a></li>
               -->
-          </ul>
-        </nav>
-      </div>
-    </div>
-  </header>
-  <main id="content" hx-get="/home" hx-trigger="load" hx-push-url="true" class="pt-1 pb-4 bg-gray-100">
-  </main>
-  <footer class="bg-gray-900 text-white">
-    <div class="container mx-auto px-6 py-4">
-      <div class="flex flex-wrap justify-between items-center">
-        <div class="flex items-center">
-          <span class="font-semibold text-xl">Movie Theater</span>
-        </div>
-        <ul class="flex space-x-4">
-          <li><a href="#" class="hover:text-gray-400">Home</a></li>
-          <li><a href="#" class="hover:text-gray-400">Showtimes</a></li>
-          <li><a href="#" class="hover:text-gray-400">Account</a></li>
-        </ul>
-        <div class="text-sm">
-          &copy; 2023 Movie Theater. All Rights Reserved.
+            </ul>
+          </nav>
         </div>
       </div>
-    </div>
-  </footer>
+    </header>
+    <main id="content" hx-get="/home" hx-trigger="load" hx-push-url="true" class="pt-1 pb-4 bg-gray-100">
+    </main>
+    <footer hx-get="/footer" hx-trigger="load" class="bg-gray-900 text-white">
+    </footer>
 </body>
-<div hx-post="cookie" hx-trigger="load"></div>
+</div>
 
 </html>

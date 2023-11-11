@@ -1,18 +1,22 @@
 use crate::DB;
 use askama::Template;
 use axum::{http::StatusCode, response::Result};
+use axum_extra::extract::PrivateCookieJar;
 use serde::{Deserialize, Serialize};
 use surrealdb::sql::Thing;
 
 #[derive(Template)]
 #[template(path = "index.html")]
-pub struct Index {}
+pub struct Index {
+    logged_in: bool,
+}
 
 #[derive(Template)]
 #[template(path = "home.html")]
 pub struct HomePage {
     pub movies: Vec<Movie>,
 }
+
 #[derive(Template)]
 #[template(path = "contact.html")]
 pub struct ContactPage {}
@@ -20,6 +24,10 @@ pub struct ContactPage {}
 #[derive(Template)]
 #[template(path = "about.html")]
 pub struct AboutPage {}
+
+#[derive(Template)]
+#[template(path = "footer.html")]
+pub struct Footer {}
 
 #[derive(Template)]
 #[template(path = "showtime.html")]
@@ -58,8 +66,22 @@ pub struct Time {
     pub time: String,
 }
 
-pub async fn index() -> Index {
-    Index {}
+#[derive(Debug, Serialize, Deserialize)]
+struct Record {
+    id: Thing,
+}
+
+pub async fn index(jar: PrivateCookieJar) -> Index {
+    let Some(session) = jar.get("session") else {
+        return Index { logged_in: false };
+    };
+    let Ok(Some(_)) = DB
+        .select::<Option<Record>>(("sessions", session.value()))
+        .await
+    else {
+        return Index { logged_in: false };
+    };
+    Index { logged_in: true }
 }
 
 pub async fn home() -> Result<HomePage> {
@@ -96,4 +118,8 @@ pub async fn showtimes() -> Result<ShowtimePage> {
         return Err(StatusCode::NOT_FOUND.into());
     };
     Ok(ShowtimePage { movies })
+}
+
+pub async fn footer() -> Footer {
+    Footer {}
 }

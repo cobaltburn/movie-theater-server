@@ -91,15 +91,9 @@ struct Record {
 }
 
 pub async fn purchase(jar: PrivateCookieJar, Path((id, seat)): Path<(String, i32)>) -> Response {
-    let Some(session) = jar.get("session") else {
-        return Redirect::to("/login").into_response();
-    };
-    let Ok(Some(_)) = DB
-        .select::<Option<Record>>(("sessions", session.value()))
-        .await
-    else {
-        return Redirect::to("/login").into_response();
-    };
+    if let Err(err) = check_session(&jar).await {
+        return err;
+    }
     let Some((_, showtime_id)) = id.split_once(':') else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
@@ -284,4 +278,17 @@ fn is_valid_cvv(cvv: &String) -> bool {
         }
     }
     true
+}
+
+async fn check_session(jar: &PrivateCookieJar) -> Result<&PrivateCookieJar, Response> {
+    let Some(session) = jar.get("session") else {
+        return Err(Redirect::to("/login").into_response());
+    };
+    let Ok(Some(_)) = DB
+        .select::<Option<Record>>(("sessions", session.value()))
+        .await
+    else {
+        return Err(Redirect::to("/login").into_response());
+    };
+    Ok(jar)
 }
