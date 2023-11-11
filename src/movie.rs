@@ -32,11 +32,19 @@ pub struct Actor {
     pub name: String,
     pub role: String,
 }
+
+#[derive(Debug, Deserialize)]
+struct Cast {
+    actors: Vec<Actor>,
+    stars: Vec<Actor>,
+    writers: Vec<String>,
+    director: String,
+}
+
 pub async fn movie(Path(id): Path<String>) -> Result<MovieAbout> {
-    let Some(split_id) = id.split_once(':') else {
+    let Some((_, showtime_id)) = id.split_once(':') else {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
     };
-    let (_, showtime_id) = split_id;
     let Ok(Some(movie)): surrealdb::Result<Option<Movie>> =
         DB.select(("movies", showtime_id)).await
     else {
@@ -45,37 +53,10 @@ pub async fn movie(Path(id): Path<String>) -> Result<MovieAbout> {
     let query = DB
         .query(
             r#"
-            SELECT VALUE (
-                SELECT (->people.name)[0] AS name, role 
-                FROM ->star
-            )
-            FROM ONLY type::thing("movies", $id)
-            "#,
-        )
-        .query(
-            r#"
-            SELECT VALUE (
-                SELECT VALUE (->people.name)[0] AS name 
-                FROM ->writer
-            )
-            FROM ONLY type::thing("movies", $id)
-            "#,
-        )
-        .query(
-            r#"
-            SELECT VALUE (
-                SELECT VALUE (->people.name)[0]
-                FROM ONLY ->director
-            )
-            FROM ONLY type::thing("movies", $id)
-            "#,
-        )
-        .query(
-            r#"
-            SELECT VALUE (
-                SELECT (->people.name)[0] AS name, role
-                FROM ->actor
-            )
+            SELECT (SELECT (->people.name)[0] AS name, role FROM ->star) AS stars, 
+            (SELECT VALUE (->people.name)[0] AS name FROM ->writer) AS writers, 
+            (SELECT VALUE (->people.name)[0] FROM ONLY ->director) AS director, 
+            (SELECT (->people.name)[0] AS name, role FROM ->actor) AS actors
             FROM ONLY type::thing("movies", $id)
             "#,
         )
@@ -85,21 +66,16 @@ pub async fn movie(Path(id): Path<String>) -> Result<MovieAbout> {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
     };
 
-    let Ok(stars) = query.take(0) else {
+    let Ok(Some(Cast {
+        actors,
+        stars,
+        writers,
+        director,
+    })) = query.take(0)
+    else {
         return Err(StatusCode::NOT_ACCEPTABLE.into());
     };
 
-    let Ok(writers) = query.take(1) else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
-    };
-
-    let Ok(Some(director)) = query.take(2) else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
-    };
-
-    let Ok(actors) = query.take(3) else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
-    };
     Ok(MovieAbout {
         movie,
         stars,

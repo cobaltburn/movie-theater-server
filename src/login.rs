@@ -1,9 +1,14 @@
 use askama::Template;
 use askama_axum::IntoResponse;
-use axum::{extract::Form, http::StatusCode, response::Response};
+use axum::{
+    extract::Form,
+    http::StatusCode,
+    response::{Redirect, Response},
+};
 use axum_extra::extract::cookie::{Cookie, PrivateCookieJar};
 use regex::Regex;
 use serde::Deserialize;
+use surrealdb::sql::Thing;
 
 use crate::DB;
 
@@ -18,25 +23,53 @@ pub struct Login {
 
 #[derive(Template)]
 #[template(path = "sign_up.html")]
-pub struct SignUp {}
+pub struct SignUp {
+    email: String,
+    valid_email: bool,
+    account_found: bool,
+    valid_password: bool,
+}
 
 #[derive(Template)]
 #[template(path = "temp.html")]
 pub struct Temp {}
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Account {
     email: String,
     password: String,
 }
 
-pub async fn get_login() -> Login {
-    Login {
-        email: String::new(),
-        password: String::new(),
-        valid_email: true,
-        account_found: true,
-    }
+#[derive(Deserialize)]
+struct Record {
+    #[allow(dead_code)]
+    id: Thing,
+}
+
+pub async fn get_login(jar: PrivateCookieJar) -> Response {
+    let Some(session) = jar.get("session") else {
+        return Login {
+            email: String::new(),
+            password: String::new(),
+            valid_email: true,
+            account_found: true,
+        }
+        .into_response();
+    };
+
+    let Ok(Some(_)) = DB
+        .select::<Option<Record>>(("sessions", session.value()))
+        .await
+    else {
+        return Login {
+            email: String::new(),
+            password: String::new(),
+            valid_email: true,
+            account_found: true,
+        }
+        .into_response();
+    };
+    Redirect::to("/account").into_response()
 }
 
 pub async fn post_login(
@@ -56,7 +89,7 @@ pub async fn post_login(
     let query = DB
         .query(
             r#"
-            SELECT * 
+            SELECT VALUE id
             FROM ONLY accounts
             WHERE email = $email AND password = $password
             "#,
@@ -69,7 +102,7 @@ pub async fn post_login(
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
 
-    let Ok(result) = query.take(0) else {
+    let Ok(Some(id)) = query.take::<Option<Thing>>(0) else {
         return Login {
             email,
             password,
@@ -79,29 +112,103 @@ pub async fn post_login(
         .into_response();
     };
 
-    let Some(account): Option<Account> = result else {
+    let query = DB
+        .query(
+            r#"            
+            BEGIN TRANSACTION;
+
+            LET $new_session = CREATE ONLY sessions;
+
+            RELATE $new_session->account_session->$user 
+                SET time = time::now();
+
+            RETURN $new_session.id;
+
+            COMMIT TRANSACTION;
+            "#,
+        )
+        .bind(("user", &id))
+        .await;
+
+    let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
-    //TODO enable session
-    let query = DB.query("").await;
 
-    (
-        jar,
-        Login {
-            email,
-            password,
-            valid_email,
-            account_found: true,
-        },
-    )
-        .into_response()
+    let Ok(Some(session)): Result<Option<Thing>, _> = query.take(0) else {
+        return StatusCode::NOT_ACCEPTABLE.into_response();
+    };
+    let jar = jar.add(Cookie::new("session", session.id.to_raw().clone()));
+    (jar, Redirect::to("/account")).into_response()
 }
 
 pub async fn sign_up() -> SignUp {
-    SignUp {}
+    SignUp {
+        email: String::new(),
+        valid_email: true,
+        valid_password: true,
+        account_found: false,
+    }
+}
+
+pub async fn create_account(
+    jar: PrivateCookieJar,
+    Form(Account { email, password }): Form<Account>,
+) -> Response {
+    let valid_email = is_valid_email(&email);
+    let valid_password = is_valid_password(&password);
+    if !valid_email || !valid_password {
+        return SignUp {
+            email,
+            valid_email,
+            valid_password,
+            account_found: false,
+        }
+        .into_response();
+    }
+
+    let query = DB
+        .query(
+            r#"
+            BEGIN TRANSACTION;
+
+            LET $user = CREATE ONLY accounts SET email = $email, password = $password;
+
+            LET $new_session = CREATE ONLY sessions;
+
+            RELATE $new_session->account_session->$user 
+                SET time = time::now();
+
+            RETURN $new_session.id;
+
+            COMMIT TRANSACTION;
+            "#,
+        )
+        .bind(("email", &email))
+        .bind(("password", &password))
+        .await;
+
+    let Ok(mut query) = query else {
+        return StatusCode::NOT_ACCEPTABLE.into_response();
+    };
+
+    let Ok(Some(session)): Result<Option<Thing>, _> = query.take(0) else {
+        return SignUp {
+            email,
+            valid_email,
+            valid_password,
+            account_found: true,
+        }
+        .into_response();
+    };
+    let jar = jar.add(Cookie::new("session", session.id.to_raw().clone()));
+    (jar, Redirect::to("/account")).into_response()
 }
 
 fn is_valid_email(email: &String) -> bool {
     let email_pattern = Regex::new(r#"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#).unwrap();
     email_pattern.is_match(email)
+}
+
+fn is_valid_password(password: &String) -> bool {
+    !password.is_empty()
 }

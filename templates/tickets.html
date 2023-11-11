@@ -1,0 +1,28 @@
+<html>
+{% for ticket in tickets%}
+<div class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="bg-white shadow-lg rounded-lg p-10 w-2/3">
+    <div class="flex flex-col items-center text-center">
+      <h3 class="text-2xl font-semibold mb-4">Your Ticket Details:</h3>
+      <div class="mb-2">
+        <p class="text-xl text-gray-700"><span class="font-bold">Movie:</span> {{ ticket.movie }}</p>
+      </div>
+      <div class="mb-2">
+        <p class="text-xl text-gray-700"><span class="font-bold">Show Time:</span> {{ ticket.time }}</p>
+      </div>
+      <div class="mb-2">
+        <p class="text-xl text-gray-700"><span class="font-bold">Seat:</span> {{ ticket.seat }}</p>
+      </div>
+      <div class="mb-2">
+        <p class="text-xl text-gray-700"><span class="font-bold">ticket:</span> {{ ticket.id }}</p>
+      </div>
+      <div>
+        {{ ticket.svg|safe }}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endfor %}
+
+</html>

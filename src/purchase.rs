@@ -4,8 +4,9 @@ use askama_axum::IntoResponse;
 use axum::{
     extract::{Form, Path},
     http::StatusCode,
-    response::{Response, Result},
+    response::{Redirect, Response},
 };
+use axum_extra::extract::PrivateCookieJar;
 use qrcode::render::svg;
 use qrcode::QrCode;
 use regex::Regex;
@@ -77,37 +78,49 @@ struct ShowtimeSeat {
     pub time: String,
 }
 
-pub async fn purchase(Path((id, seat)): Path<(String, i32)>) -> Result<PurchasePage> {
-    let Some(split_id) = id.split_once(':') else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
+#[derive(Debug, Deserialize)]
+struct MovieTime {
+    movie: String,
+    time: String,
+}
+
+#[derive(Deserialize)]
+struct Record {
+    #[allow(dead_code)]
+    id: Thing,
+}
+
+pub async fn purchase(jar: PrivateCookieJar, Path((id, seat)): Path<(String, i32)>) -> Response {
+    let Some(session) = jar.get("session") else {
+        return Redirect::to("/login").into_response();
     };
-    let (_, showtime_id) = split_id;
+    let Ok(Some(_)) = DB
+        .select::<Option<Record>>(("sessions", session.value()))
+        .await
+    else {
+        return Redirect::to("/login").into_response();
+    };
+    let Some((_, showtime_id)) = id.split_once(':') else {
+        return StatusCode::NOT_ACCEPTABLE.into_response();
+    };
     let query = DB
         .query(
             r#"
-            SELECT VALUE time::format(time, "%k:%M, %e %h")
+            SELECT (<-showing<-theaters<-playing<-movies.name)[0] AS movie, 
+            time::format(time, "%k:%M") AS time
             FROM ONLY type::thing("showtime", $id)
-            "#,
-        )
-        .query(
-            r#"
-            SELECT VALUE <-showing<-theaters<-playing<-movies.name
-            FROM ONLY type::thing("showtime",$id)
             "#,
         )
         .bind(("id", showtime_id))
         .await;
     let Ok(mut query) = query else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
+        return StatusCode::NOT_ACCEPTABLE.into_response();
     };
-    let Ok(Some(time)) = query.take(0) else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
-    };
-    let Ok(Some(movie)) = query.take(1) else {
-        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    let Ok(Some(MovieTime { movie, time })) = query.take(0) else {
+        return StatusCode::NOT_ACCEPTABLE.into_response();
     };
 
-    Ok(PurchasePage::new(id, time, seat, movie))
+    PurchasePage::new(id, time, seat, movie).into_response()
 }
 
 pub async fn complete_purchase(
@@ -141,10 +154,9 @@ pub async fn complete_purchase(
         .into_response();
     }
 
-    let Some(split_id) = id.split_once(':') else {
+    let Some((_, showtime_id)) = id.split_once(':') else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
-    let (_, showtime_id) = split_id;
 
     let query = DB
         .query(
@@ -225,7 +237,7 @@ pub async fn complete_purchase(
     let code = QrCode::new(ticket.id.to_string().as_bytes()).unwrap();
     let svg = code
         .render()
-        .min_dimensions(512, 512)
+        .min_dimensions(400, 400)
         .dark_color(svg::Color("#000000"))
         .light_color(svg::Color("#ffffff"))
         .build();

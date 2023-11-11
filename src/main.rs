@@ -1,3 +1,4 @@
+use account::*;
 use askama::Template;
 use axum::{
     extract::FromRef,
@@ -18,6 +19,7 @@ use surrealdb::{
 };
 use tower_http::services::ServeDir;
 
+mod account;
 mod landing;
 mod login;
 mod movie;
@@ -71,6 +73,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/login", get(get_login))
         .route("/login", post(post_login))
         .route("/sign_up", get(sign_up))
+        .route("/sign_up", post(create_account))
+        .route("/account", get(tickets))
         .route("/home", get(home))
         .route("/about", get(about))
         .route("/contact", get(contact))
