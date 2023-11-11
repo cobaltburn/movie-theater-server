@@ -11,6 +11,7 @@ askama = "0.12.1"
 askama_axum = "0.3.0"
 axum = { version = "0.6.20", features = ["query", "ws"] }
 axum-extra = { version = "0.8.0", features = ["cookie", "cookie-private"] }
+axum-htmx = { version = "0.4.0", features = ["guards"] }
 chrono = { version = "0.4.31", features = ["std"] }
 hyper-staticfile = "0.9.5"
 lettre = { version = "0.11.1", features = ["tokio1", "tokio1-native-tls"] }
@@ -21,4 +22,4 @@ serde = "1.0.188"
 surrealdb = "1.0.0"
 tokio = { version = "1.32.0", features = ["full"] }
 tower = { version = "0.4.13", features = ["full"] }
-tower-http = { version = "0.4.4", features = ["fs"] }
+tower-http = { version = "0.4.4", features = ["fs", "validate-request"] }

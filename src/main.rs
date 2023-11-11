@@ -95,21 +95,3 @@ async fn main() -> anyhow::Result<()> {
         .unwrap();
     Ok(())
 }
-
-#[cfg(test)]
-mod test {
-
-    #[test]
-    fn test() {
-        use qrcode::render::svg;
-        use qrcode::QrCode;
-        let code = QrCode::new(b"hello world").unwrap();
-        let image = code
-            .render()
-            .min_dimensions(1024, 1024)
-            .dark_color(svg::Color("#800000"))
-            .light_color(svg::Color("#ffffff"))
-            .build();
-        println!("{}", image);
-    }
-}

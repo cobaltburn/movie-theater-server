@@ -37,11 +37,9 @@ pub struct PurchasePage {
     pub card_num: String,
     pub exp_date: String,
     pub cvv: String,
-    pub email: String,
     pub valid_card_num: bool,
     pub valid_exp: bool,
     pub valid_cvv: bool,
-    pub valid_email: bool,
 }
 
 impl PurchasePage {
@@ -54,11 +52,9 @@ impl PurchasePage {
             card_num: String::new(),
             exp_date: String::new(),
             cvv: String::new(),
-            email: String::new(),
             valid_card_num: true,
             valid_cvv: true,
             valid_exp: true,
-            valid_email: true,
         }
     }
 }
@@ -68,7 +64,6 @@ pub struct UserInfo {
     pub card_num: String,
     pub exp_date: String,
     pub cvv: String,
-    pub email: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -118,19 +113,23 @@ pub async fn purchase(jar: PrivateCookieJar, Path((id, seat)): Path<(String, i32
 }
 
 pub async fn complete_purchase(
+    jar: PrivateCookieJar,
     Path((id, seat, movie, time)): Path<(String, i32, String, String)>,
     Form(UserInfo {
         card_num,
         exp_date,
         cvv,
-        email,
     }): Form<UserInfo>,
 ) -> Response {
-    let valid_email = is_valid_email(&email);
+    let jar = match check_session(&jar).await {
+        Ok(e) => e,
+        Err(err) => return err,
+    };
+
     let valid_card_num = is_valid_card_number(&card_num);
     let valid_cvv = is_valid_cvv(&cvv);
     let valid_exp = is_valid_exp(&exp_date);
-    if !valid_email || !valid_card_num || !valid_cvv || !valid_exp {
+    if !valid_card_num || !valid_cvv || !valid_exp {
         return PurchasePage {
             id,
             time,
@@ -139,11 +138,9 @@ pub async fn complete_purchase(
             card_num,
             exp_date,
             cvv,
-            email,
             valid_card_num,
             valid_cvv,
             valid_exp,
-            valid_email,
         }
         .into_response();
     }
@@ -152,30 +149,19 @@ pub async fn complete_purchase(
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
 
-    let query = DB
-        .query(
-            r#"
-            SELECT VALUE id 
-            FROM ONLY accounts
-            WHERE email = $email
-            "#,
-        )
-        .bind(("email", &email))
-        .await;
-
-    let Ok(mut query) = query else {
+    let Some(session) = jar.get("session") else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
 
-    let (query, index) = if let Ok(Some(user_id)) = query.take(0) {
-        let user_id: Thing = user_id;
-        (DB
+    let query= DB
             .query(
                 r#"
                 BEGIN TRANSACTION;
+                LET $user = SELECT VALUE (->account_session->accounts)[0]  
+                FROM ONLY type::thing("sessions", $session_id);
 
                 LET $seat = SELECT VALUE ->showtime_seat->(seats WHERE number = $seat_num AND available = true).*
-                FROM ONLY type::thing("showtime", $id);
+                FROM ONLY type::thing("showtime", $showtime);
 
                 UPDATE $seat SET available = false;
 
@@ -184,43 +170,18 @@ pub async fn complete_purchase(
                 COMMIT TRANSACTION                
                 "#,
             )
+            .bind(("session_id", session.value()))
             .bind(("seat_num", seat))
-            .bind(("id", &showtime_id))
-            .bind(("user", &user_id))
+            .bind(("showtime", &showtime_id))
             .bind(("card_number", &card_num))
             .bind(("exp_date", &exp_date))
-            .await, 2)
-    } else {
-        (DB
-            .query(
-                r#"
-                BEGIN TRANSACTION;
-
-                LET $user = CREATE accounts SET email = $email;
-
-                LET $seat = SELECT VALUE ->showtime_seat->(seats WHERE number = $seat_num AND available = true).*
-                FROM ONLY type::thing("showtime", $id);
-
-                UPDATE $seat SET available = false;
-
-                RELATE ONLY $user->purchase->$seat SET time = time::now(), card_number = $card_number, exp_date = $exp_date RETURN VALUE id;
-
-                COMMIT TRANSACTION                
-                "#,
-            )
-            .bind(("email", &email))
-            .bind(("seat_num", seat))
-            .bind(("id", &showtime_id))
-            .bind(("card_number", &card_num))
-            .bind(("exp_date", &exp_date))
-            .await, 3)
-    };
+            .await;
 
     let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
 
-    let Ok(result) = query.take(index) else {
+    let Ok(result) = query.take(3) else {
         return Unavailable {}.into_response();
     };
 
@@ -244,11 +205,6 @@ pub async fn complete_purchase(
         svg,
     }
     .into_response()
-}
-
-fn is_valid_email(email: &String) -> bool {
-    let email_pattern = Regex::new(r#"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#).unwrap();
-    email_pattern.is_match(email)
 }
 
 fn is_valid_exp(exp: &String) -> bool {

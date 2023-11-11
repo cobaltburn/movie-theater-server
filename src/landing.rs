@@ -1,5 +1,6 @@
 use crate::DB;
 use askama::Template;
+use askama_axum::{IntoResponse, Response};
 use axum::{http::StatusCode, response::Result};
 use axum_extra::extract::PrivateCookieJar;
 use serde::{Deserialize, Serialize};
@@ -71,17 +72,17 @@ struct Record {
     id: Thing,
 }
 
-pub async fn index(jar: PrivateCookieJar) -> Index {
+pub async fn index(jar: PrivateCookieJar) -> Response {
     let Some(session) = jar.get("session") else {
-        return Index { logged_in: false };
+        return Index { logged_in: false }.into_response();
     };
     let Ok(Some(_)) = DB
         .select::<Option<Record>>(("sessions", session.value()))
         .await
     else {
-        return Index { logged_in: false };
+        return Index { logged_in: false }.into_response();
     };
-    Index { logged_in: true }
+    Index { logged_in: true }.into_response()
 }
 
 pub async fn home() -> Result<HomePage> {
@@ -90,6 +91,7 @@ pub async fn home() -> Result<HomePage> {
     };
     Ok(HomePage { movies })
 }
+
 pub async fn about() -> AboutPage {
     AboutPage {}
 }

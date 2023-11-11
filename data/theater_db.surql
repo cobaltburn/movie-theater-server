@@ -10,7 +10,7 @@ OPTION IMPORT;
 
 DEFINE TABLE account_session SCHEMALESS;
 
-DEFINE FIELD in ON account_session TYPE record<session>;
+DEFINE FIELD in ON account_session TYPE record<sessions>;
 DEFINE FIELD out ON account_session TYPE record<accounts>;
 
 -- ------------------------------
@@ -104,10 +104,10 @@ DEFINE FIELD available ON seats;
 DEFINE FIELD number ON seats;
 
 -- ------------------------------
--- TABLE: session
+-- TABLE: sessions
 -- ------------------------------
 
-DEFINE TABLE session SCHEMALESS;
+DEFINE TABLE sessions SCHEMALESS PERMISSIONS NONE;
 
 -- ------------------------------
 -- TABLE: showing
@@ -5225,7 +5225,7 @@ UPDATE seats:zzciehuqwpeh96jqlf9i CONTENT { available: true, id: seats:zzciehuqw
 UPDATE seats:zzifu92zh69kr3qig4m3 CONTENT { available: true, id: seats:zzifu92zh69kr3qig4m3, number: 11 };
 
 -- ------------------------------
--- TABLE DATA: session
+-- TABLE DATA: sessions
 -- ------------------------------
 
 

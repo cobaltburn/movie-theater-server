@@ -90,10 +90,7 @@ pub async fn select_seat(jar: PrivateCookieJar, Path((id, seat)): Path<(String, 
     .into_response()
 }
 
-pub async fn seating(jar: PrivateCookieJar, Path(id): Path<String>) -> Response {
-    if let Err(err) = check_session(&jar).await {
-        return err;
-    }
+pub async fn seating(Path(id): Path<String>) -> Response {
     let Some((_, showtime_id)) = id.split_once(':') else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };

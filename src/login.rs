@@ -136,8 +136,12 @@ pub async fn post_login(
     let Ok(Some(session)): Result<Option<Thing>, _> = query.take(0) else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
-    let jar = jar.add(Cookie::new("session", session.id.to_raw().clone()));
-    (jar, Redirect::to("/")).into_response()
+    let mut jar = jar
+        .add(Cookie::new("session", session.id.to_raw().clone()))
+        .into_response();
+    jar.headers_mut()
+        .insert("HX-Redirect", "/".parse().unwrap());
+    jar
 }
 
 pub async fn sign_up() -> SignUp {
@@ -199,8 +203,12 @@ pub async fn create_account(
         }
         .into_response();
     };
-    let jar = jar.add(Cookie::new("session", session.id.to_raw().clone()));
-    (jar, Redirect::to("/account")).into_response()
+    let mut jar = jar
+        .add(Cookie::new("session", session.id.to_raw().clone()))
+        .into_response();
+    jar.headers_mut()
+        .insert("HX-Redirect", "/".parse().unwrap());
+    jar
 }
 
 fn is_valid_email(email: &String) -> bool {
