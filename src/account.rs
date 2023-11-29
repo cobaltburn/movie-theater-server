@@ -66,10 +66,10 @@ pub async fn tickets(jar: PrivateCookieJar) -> Response {
     let query = DB
         .query(
             r#"
-            SELECT number AS seat, 
+            SELECT seat, 
             (<-purchase[0].id) AS id, 
             (<-showtime_seat<-showtime<-showing<-theaters<-playing<-movies.name)[0] AS movie, 
-            time::format((<-showtime_seat<-showtime.time)[0], "%k:%M") AS time
+            time::format((<-showtime_seat<-showtime.time)[0], "%k:%M, %a") AS time
             FROM (
                 SELECT VALUE ->account_session->accounts->purchase->seats 
                 FROM ONLY type::thing("sessions", $id)

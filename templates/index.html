@@ -28,17 +28,12 @@
               <li><a href="#" hx-post="/logout" hx-target="#body" class="hover:text-gray-400">Logout</a>
               </li>
               {% endif %}
-              <!-- <li><a href="#" hx-get="/about" hx-target="#content" 
-                class="hover:text-gray-400">About</a></li>
-              <li><a href="#" hx-get="/contact" hx-target="#content" 
-                  class="hover:text-gray-400">Contact</a></li>
-              -->
             </ul>
           </nav>
         </div>
       </div>
     </header>
-    <main id="content" hx-get="/home" hx-trigger="load" class="pt-1 pb-4 bg-gray-100">
+    <main id="content" hx-get="/home" hx-trigger="load" class="pt-1 pb-4 bg-gray-100 min-h-screen flex flex-col">
     </main>
     <footer hx-get="/footer" hx-trigger="load" class="bg-gray-900 text-white">
     </footer>

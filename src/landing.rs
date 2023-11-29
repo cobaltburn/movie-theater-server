@@ -1,6 +1,5 @@
 use crate::DB;
 use askama::Template;
-use askama_axum::{IntoResponse, Response};
 use axum::{http::StatusCode, response::Result};
 use axum_extra::extract::PrivateCookieJar;
 use serde::{Deserialize, Serialize};
@@ -17,14 +16,6 @@ pub struct Index {
 pub struct HomePage {
     pub movies: Vec<Movie>,
 }
-
-#[derive(Template)]
-#[template(path = "contact.html")]
-pub struct ContactPage {}
-
-#[derive(Template)]
-#[template(path = "about.html")]
-pub struct AboutPage {}
 
 #[derive(Template)]
 #[template(path = "footer.html")]
@@ -72,17 +63,17 @@ struct Record {
     id: Thing,
 }
 
-pub async fn index(jar: PrivateCookieJar) -> Response {
+pub async fn index(jar: PrivateCookieJar) -> Index {
     let Some(session) = jar.get("session") else {
-        return Index { logged_in: false }.into_response();
+        return Index { logged_in: false };
     };
     let Ok(Some(_)) = DB
         .select::<Option<Record>>(("sessions", session.value()))
         .await
     else {
-        return Index { logged_in: false }.into_response();
+        return Index { logged_in: false };
     };
-    Index { logged_in: true }.into_response()
+    Index { logged_in: true }
 }
 
 pub async fn home() -> Result<HomePage> {
@@ -92,21 +83,14 @@ pub async fn home() -> Result<HomePage> {
     Ok(HomePage { movies })
 }
 
-pub async fn about() -> AboutPage {
-    AboutPage {}
-}
-
-pub async fn contact() -> ContactPage {
-    ContactPage {}
-}
-
 pub async fn showtimes() -> Result<ShowtimePage> {
     let query = DB
         .query(
             r#"
             SELECT *, (
-                SELECT time::format(time, "%k:%M") AS time, id 
+                SELECT id, time::format(time, "%k:%M") AS time 
                 FROM ->?->?->?->showtime 
+                WHERE day = 1
                 ORDER BY time
             ) AS times
             FROM movies

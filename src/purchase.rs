@@ -89,18 +89,15 @@ pub async fn purchase(jar: PrivateCookieJar, Path((id, seat)): Path<(String, i32
     if let Err(err) = check_session(&jar).await {
         return err;
     }
-    let Some((_, showtime_id)) = id.split_once(':') else {
-        return StatusCode::NOT_ACCEPTABLE.into_response();
-    };
     let query = DB
         .query(
             r#"
             SELECT (<-showing<-theaters<-playing<-movies.name)[0] AS movie, 
-            time::format(time, "%k:%M") AS time
+            time::format(time, "%k:%M, %a") AS time
             FROM ONLY type::thing("showtime", $id)
             "#,
         )
-        .bind(("id", showtime_id))
+        .bind(("id", &id))
         .await;
     let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
@@ -145,10 +142,6 @@ pub async fn complete_purchase(
         .into_response();
     }
 
-    let Some((_, showtime_id)) = id.split_once(':') else {
-        return StatusCode::NOT_ACCEPTABLE.into_response();
-    };
-
     let Some(session) = jar.get("session") else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
@@ -160,7 +153,7 @@ pub async fn complete_purchase(
                 LET $user = SELECT VALUE (->account_session->accounts)[0]  
                 FROM ONLY type::thing("sessions", $session_id);
 
-                LET $seat = SELECT VALUE ->showtime_seat->(seats WHERE number = $seat_num AND available = true).*
+                LET $seat = SELECT VALUE ->showtime_seat->(seats WHERE seat = $seat_num AND available = true).*
                 FROM ONLY type::thing("showtime", $showtime);
 
                 UPDATE $seat SET available = false;
@@ -172,11 +165,12 @@ pub async fn complete_purchase(
             )
             .bind(("session_id", session.value()))
             .bind(("seat_num", seat))
-            .bind(("showtime", &showtime_id))
+            .bind(("showtime", id))
             .bind(("card_number", &card_num))
             .bind(("exp_date", &exp_date))
             .await;
 
+    println!("{:?}", query);
     let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };

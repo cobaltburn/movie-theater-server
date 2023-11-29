@@ -2,9 +2,9 @@ use crate::DB;
 use askama::Template;
 use askama_axum::IntoResponse;
 use axum::{
-    extract::Path,
+    extract::{Form, Path},
     http::StatusCode,
-    response::{Redirect, Response},
+    response::{Redirect, Response, Result},
 };
 use axum_extra::extract::PrivateCookieJar;
 use serde::{Deserialize, Serialize};
@@ -25,10 +25,16 @@ pub struct SeatingPage {
     pub seats: Vec<Seat>,
 }
 
+#[derive(Template)]
+#[template(path = "times.html")]
+pub struct Times {
+    pub times: Vec<Time>,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Seat {
     pub available: bool,
-    pub number: i32,
+    pub seat: i32,
     pub id: Thing,
 }
 
@@ -56,23 +62,37 @@ struct Record {
     id: Thing,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ShowInformation {
+    day: i32,
+    time: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Day {
+    pub day: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Time {
+    id: Thing,
+    time: String,
+}
+
 pub async fn select_seat(jar: PrivateCookieJar, Path((id, seat)): Path<(String, i32)>) -> Response {
     if let Err(err) = check_session(&jar).await {
         return err;
     }
-    let Some((_, showtime_id)) = id.split_once(':') else {
-        return StatusCode::NOT_ACCEPTABLE.into_response();
-    };
 
     let query = DB
         .query(
             r#"
             SELECT (<-showing<-theaters<-playing<-movies.*)[0] AS movie,
-            time::format(time, "%k:%M") AS time
+            time::format(time, "%k:%M, %a") AS time
             FROM ONLY type::thing("showtime",$id)
             "#,
         )
-        .bind(("id", showtime_id))
+        .bind(("id", &id))
         .await;
     let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
@@ -90,24 +110,57 @@ pub async fn select_seat(jar: PrivateCookieJar, Path((id, seat)): Path<(String, 
     .into_response()
 }
 
-pub async fn seating(Path(id): Path<String>) -> Response {
-    let Some((_, showtime_id)) = id.split_once(':') else {
-        return StatusCode::NOT_ACCEPTABLE.into_response();
+pub async fn seating(Path(id): Path<String>) -> Result<SeatingPage> {
+    let Some((_, id)) = id.split_once(':') else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
+    let query = DB
+        .query(
+            r#"            
+            SELECT VALUE ->showtime_seat->seats.* 
+            FROM ONLY type::thing("showtime", $id);            
+            "#,
+        )
+        .bind(("id", &id))
+        .await;
+    let Ok(mut query) = query else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
+    let Ok(mut seats): Result<Vec<Seat>, _> = query.take(0) else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
+    };
+    seats.sort_by(|a, b| a.seat.cmp(&b.seat));
+    Ok(SeatingPage {
+        id: id.to_string(),
+        seats,
+    })
+}
+
+pub async fn times(Path(id): Path<String>, Form(Day { day }): Form<Day>) -> Result<Times> {
+    let Some((_, id)) = id.split_once(':') else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
     };
 
     let query = DB
-        .query(r#"SELECT VALUE ->showtime_seat->seats.* FROM ONLY type::thing("showtime",$id)"#)
-        .bind(("id", showtime_id))
+        .query(
+            r#" 
+            SELECT id, time::format(time, "%k:%M") AS time
+            FROM showtime
+            WHERE <-showing<-theaters CONTAINS type::thing("theaters", $id) &&
+            day = $day
+            ORDER BY time
+            "#,
+        )
+        .bind(("id", id))
+        .bind(("day", day))
         .await;
     let Ok(mut query) = query else {
-        return StatusCode::NOT_ACCEPTABLE.into_response();
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
     };
-    let Ok(mut seats): Result<Vec<Seat>, _> = query.take(0) else {
-        return StatusCode::NOT_ACCEPTABLE.into_response();
+    let Ok(times): Result<Vec<Time>, _> = query.take(0) else {
+        return Err(StatusCode::NOT_ACCEPTABLE.into());
     };
-    seats.sort_by(|a, b| a.number.cmp(&b.number));
-
-    SeatingPage { id, seats }.into_response()
+    Ok(Times { times })
 }
 
 async fn check_session(jar: &PrivateCookieJar) -> Result<&PrivateCookieJar, Response> {

@@ -66,7 +66,8 @@ async fn main() -> anyhow::Result<()> {
 
     let seating_routes = Router::new()
         .route("/:id", get(seating))
-        .route("/:id/:seat", get(select_seat));
+        .route("/:id/:seat", get(select_seat))
+        .route("/times/:id", get(times));
 
     let app = Router::new()
         .route("/", get(index))
@@ -77,8 +78,6 @@ async fn main() -> anyhow::Result<()> {
         .route("/sign_up", post(create_account))
         .route("/account", get(tickets))
         .route("/home", get(home))
-        .route("/about", get(about))
-        .route("/contact", get(contact))
         .route("/footer", get(footer))
         .route("/showtimes", get(showtimes))
         .route("/movie/:id", get(movie))
