@@ -69,6 +69,10 @@ async fn main() -> anyhow::Result<()> {
         .route("/:id/:seat", get(select_seat))
         .route("/times/:id", get(times));
 
+    let account_routes = Router::new()
+        .route("/", get(tickets))
+        .route("/search", get(search_tickets));
+
     let app = Router::new()
         .route("/", get(index))
         .route("/login", get(get_login))
@@ -76,11 +80,11 @@ async fn main() -> anyhow::Result<()> {
         .route("/logout", post(logout))
         .route("/sign_up", get(sign_up))
         .route("/sign_up", post(create_account))
-        .route("/account", get(tickets))
         .route("/home", get(home))
         .route("/footer", get(footer))
         .route("/showtimes", get(showtimes))
         .route("/movie/:id", get(movie))
+        .nest("/account", account_routes)
         .nest("/seating", seating_routes)
         .nest("/purchase", purchase_routes)
         .nest_service("/images", get_service(ServeDir::new("images")))
