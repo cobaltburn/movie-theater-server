@@ -170,7 +170,6 @@ pub async fn complete_purchase(
             .bind(("exp_date", &exp_date))
             .await;
 
-    println!("{:?}", query);
     let Ok(mut query) = query else {
         return StatusCode::NOT_ACCEPTABLE.into_response();
     };
